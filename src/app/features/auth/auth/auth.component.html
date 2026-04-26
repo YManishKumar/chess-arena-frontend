@@ -1,0 +1,39 @@
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-logo">&#9823;</div>
+    <h1 class="auth-title">Chess Arena</h1>
+    <p class="auth-sub">{{ step === 'phone' ? 'Enter your phone to get started' : 'Enter the OTP sent to ' + phone }}</p>
+
+    <div *ngIf="error" class="error-msg">{{ error }}</div>
+
+    <div *ngIf="step === 'phone'" class="auth-form">
+      <input
+        [(ngModel)]="phone"
+        placeholder="+1 234 567 8900"
+        (keyup.enter)="sendOtp()"
+        type="tel"
+        class="auth-input"
+      />
+      <button class="auth-btn" (click)="sendOtp()" [disabled]="loading || !phone.trim()">
+        {{ loading ? 'Sending...' : 'Send OTP' }}
+      </button>
+    </div>
+
+    <div *ngIf="step === 'otp'" class="auth-form">
+      <input
+        [(ngModel)]="otp"
+        placeholder="Enter OTP"
+        (keyup.enter)="verify()"
+        type="text"
+        inputmode="numeric"
+        maxlength="6"
+        class="auth-input otp-input"
+        autofocus
+      />
+      <button class="auth-btn" (click)="verify()" [disabled]="loading || !otp.trim()">
+        {{ loading ? 'Verifying...' : 'Verify & Login' }}
+      </button>
+      <button class="auth-back" (click)="back()">&#8592; Back</button>
+    </div>
+  </div>
+</div>

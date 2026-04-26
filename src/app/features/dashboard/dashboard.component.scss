@@ -1,0 +1,106 @@
+.dashboard-wrapper {
+  min-height: 100vh;
+  background: #0b1a2f;
+  color: #fff;
+}
+
+.dash-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: rgba(0,0,0,0.2);
+}
+
+.dash-logo {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.dash-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.btn-chat {
+  padding: 8px 16px;
+  background: #3b82f6;
+  color: #fff;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.btn-logout {
+  padding: 8px 16px;
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  &:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+}
+
+.dash-body {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.welcome {
+  margin-bottom: 32px;
+
+  h2 { font-size: 28px; margin: 0 0 6px; }
+  .phone { color: rgba(255,255,255,0.4); font-size: 14px; margin: 0; }
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.stat-card {
+  background: #0f2647;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  padding: 20px 16px;
+  text-align: center;
+
+  .stat-icon { font-size: 28px; margin-bottom: 8px; }
+  .stat-value { font-size: 26px; font-weight: 700; color: #3b82f6; }
+  .stat-label { font-size: 12px; color: rgba(255,255,255,0.45); margin-top: 4px; }
+}
+
+.quick-actions {
+  h3 { font-size: 16px; font-weight: 600; margin: 0 0 14px; color: rgba(255,255,255,0.7); }
+}
+
+.action-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  background: #0f2647;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  text-decoration: none;
+  color: #fff;
+  transition: border-color 0.18s;
+
+  &:hover { border-color: #3b82f6; }
+
+  .action-icon { font-size: 28px; }
+  .action-title { font-size: 15px; font-weight: 600; }
+  .action-sub { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 3px; }
+  .action-arrow { margin-left: auto; color: rgba(255,255,255,0.3); font-size: 18px; }
+}
