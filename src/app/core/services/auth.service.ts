@@ -11,7 +11,7 @@ export class AuthService {
   constructor(private http: HttpClient, private router: Router) {}
 
   signup(name: string, email: string, password: string, phone: string) {
-    return this.http.post<any>(`${this.API}/signup`, { name, email, password, phone }).pipe(
+    return this.http.post<any>(`${this.API}/signup-v2`, { name, email, password, phone }).pipe(
       tap((res: any) => {
         if (res?.token) this.storeSession(res.token, res.user);
       })

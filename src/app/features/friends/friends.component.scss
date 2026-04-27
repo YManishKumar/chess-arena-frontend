@@ -1,35 +1,120 @@
-.friends-wrapper {
+:host {
+  --bg:      #07111f;
+  --surface: #0e1e30;
+  --border:  rgba(255,255,255,0.08);
+  --text:    #f0f4f8;
+  --muted:   rgba(255,255,255,0.38);
+  --blue:    #3b82f6;
+  --green:   #10b981;
+  --amber:   #f59e0b;
+  --red:     #ef4444;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.friends-shell {
   flex: 1;
   overflow-y: auto;
-  background: #0b1a2f;
-  color: #fff;
+  background: var(--bg);
+  color: var(--text);
+
+  &::-webkit-scrollbar { width: 3px; }
+  &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
 }
 
 .friends-body {
-  max-width: 700px;
+  max-width: 680px;
   margin: 0 auto;
-  padding: 32px 24px;
+  padding: 32px 24px 48px;
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 24px;
 }
 
-// ─── Page Header ─────────────────────────────────────────────────────────────
+// ─── Header ───────────────────────────────────────────────────────────────────
 
 .page-header {
-  h2 { font-size: 26px; font-weight: 700; margin: 0 0 6px; }
-  .page-sub { font-size: 14px; color: rgba(255,255,255,0.4); margin: 0; }
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  h2 { font-size: 24px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.3px; }
+  .page-sub { font-size: 13px; color: var(--muted); margin: 0; }
 }
 
-// ─── Add Friend Card ──────────────────────────────────────────────────────────
+.header-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #1e3a5f, #2d6a9f);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(59,130,246,0.25);
+}
+
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
+
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  position: relative;
+
+  .tab-icon { font-size: 15px; }
+
+  &:hover:not(.active) { color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.04); }
+
+  &.active {
+    background: var(--blue);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 0 16px rgba(59,130,246,0.4);
+  }
+}
+
+.tab-badge {
+  background: var(--amber);
+  color: #000;
+  border-radius: 10px;
+  padding: 1px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+// ─── Add Card ─────────────────────────────────────────────────────────────────
 
 .add-card {
-  background: #0f2647;
-  border: 1px solid rgba(255,255,255,0.08);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 20px;
 
-  h3 { font-size: 15px; font-weight: 600; margin: 0 0 14px; color: rgba(255,255,255,0.7); }
+  h3 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.5px; }
 }
 
 .add-form {
@@ -41,39 +126,84 @@
   flex: 1;
   padding: 10px 14px;
   border-radius: 10px;
-  border: 1.5px solid rgba(255,255,255,0.1);
-  background: rgba(255,255,255,0.05);
-  color: #fff;
+  border: 1.5px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  color: var(--text);
   font-size: 14px;
   outline: none;
   transition: border-color 0.18s;
 
-  &::placeholder { color: rgba(255,255,255,0.3); }
-  &:focus { border-color: rgba(255,255,255,0.3); }
-  &:disabled { opacity: 0.5; }
+  &::placeholder { color: var(--muted); }
+  &:focus { border-color: rgba(255,255,255,0.25); }
+  &:disabled { opacity: 0.45; }
 }
 
 .add-btn {
-  padding: 10px 20px;
+  padding: 10px 18px;
   border-radius: 10px;
   border: none;
-  background: #3b82f6;
+  background: var(--blue);
   color: #fff;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   transition: all 0.15s;
 
   &:hover:not(:disabled) { background: #2563eb; }
-  &:disabled { opacity: 0.45; cursor: not-allowed; }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+.spin-sm {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
 }
 
 .msg {
-  font-size: 13px;
+  font-size: 12.5px;
   margin: 10px 0 0;
-  &.error  { color: #f87171; }
+  &.error   { color: #f87171; }
   &.success { color: #34d399; }
+}
+
+// ─── Search ───────────────────────────────────────────────────────────────────
+
+.search-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 14px;
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 11px 14px 11px 42px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.18s;
+
+  &::placeholder { color: var(--muted); }
+  &:focus { border-color: rgba(255,255,255,0.22); }
 }
 
 // ─── Sections ─────────────────────────────────────────────────────────────────
@@ -81,58 +211,62 @@
 .section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .section-title {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: 11.5px;
   font-weight: 600;
-  color: rgba(255,255,255,0.55);
+  color: var(--muted);
   margin: 0;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.7px;
 }
 
-.count-badge {
-  background: rgba(59,130,246,0.2);
-  color: #60a5fa;
+.badge {
   border-radius: 20px;
   padding: 1px 8px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
 
-  &.muted {
-    background: rgba(255,255,255,0.08);
-    color: rgba(255,255,255,0.35);
-  }
+  &.blue  { background: rgba(59,130,246,0.18); color: #60a5fa; }
+  &.amber { background: rgba(245,158,11,0.18); color: #fbbf24; }
+  &.muted { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.3); }
 }
 
-// ─── Friend Cards ─────────────────────────────────────────────────────────────
+// ─── Card List ────────────────────────────────────────────────────────────────
 
-.friend-list {
+.card-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
 }
 
 .friend-card {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 14px 16px;
-  background: #0f2647;
-  border: 1px solid rgba(255,255,255,0.07);
+  padding: 13px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, transform 0.15s;
 
-  &:hover { border-color: rgba(255,255,255,0.15); }
-
-  &.pending-card { border-color: rgba(245,158,11,0.25); }
-  &.muted-card   { opacity: 0.65; }
+  &:hover { border-color: rgba(255,255,255,0.14); }
+  &.incoming { border-color: rgba(245,158,11,0.3); }
+  &.muted    { opacity: 0.6; }
+  &.member-card { animation: fadeIn 0.2s ease; }
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+// ─── Avatar ───────────────────────────────────────────────────────────────────
 
 .avatar {
   width: 40px;
@@ -142,24 +276,27 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: #60a5fa;
   flex-shrink: 0;
+  border: 1.5px solid rgba(59,130,246,0.3);
 
-  &.online { background: rgba(16,185,129,0.15); color: #34d399; }
-  &.muted  { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.3); }
+  &.green { background: rgba(16,185,129,0.15); color: #34d399; border-color: rgba(16,185,129,0.3); }
+  &.dim   { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.25); border-color: transparent; }
 }
+
+// ─── Friend Info ──────────────────────────────────────────────────────────────
 
 .friend-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   min-width: 0;
 }
 
-.friend-email {
+.name {
   font-size: 14px;
   font-weight: 500;
   white-space: nowrap;
@@ -167,75 +304,123 @@
   text-overflow: ellipsis;
 }
 
-.friend-meta {
+.meta {
   font-size: 12px;
-  color: rgba(255,255,255,0.35);
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 
-  &.status-accepted { color: #34d399; }
+  &.accepted { color: #34d399; }
 }
 
-.friend-actions {
+// ─── Actions ──────────────────────────────────────────────────────────────────
+
+.actions {
   display: flex;
   gap: 6px;
   flex-shrink: 0;
+  align-items: center;
 }
 
-.btn-accept {
+.btn-blue {
   padding: 6px 14px;
   border-radius: 8px;
   border: none;
-  background: #10b981;
+  background: var(--blue);
   color: #fff;
-  font-size: 13px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  &:hover { background: #2563eb; }
+}
+
+.btn-green {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  background: var(--green);
+  color: #fff;
+  font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s;
   &:hover { background: #059669; }
 }
 
-.btn-remove {
+.btn-ghost {
   padding: 6px 12px;
   border-radius: 8px;
-  border: 1px solid rgba(239,68,68,0.25);
+  border: 1px solid var(--border);
   background: transparent;
-  color: rgba(239,68,68,0.7);
-  font-size: 13px;
+  color: var(--muted);
+  font-size: 12.5px;
   cursor: pointer;
   transition: all 0.15s;
-  &:hover { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.5); color: #f87171; }
+  &:hover { background: rgba(255,255,255,0.05); color: var(--text); }
 }
 
-// ─── Empty / Loading ──────────────────────────────────────────────────────────
+.btn-ghost-red {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(239,68,68,0.22);
+  background: transparent;
+  color: rgba(239,68,68,0.65);
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: all 0.15s;
+  &:hover { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.45); color: #f87171; }
+}
 
-.empty-state {
-  text-align: center;
-  padding: 40px 20px;
-  color: rgba(255,255,255,0.3);
+.badge-pill {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+
+  &.green-pill { background: rgba(16,185,129,0.15); color: #34d399; }
+}
+
+// ─── States ───────────────────────────────────────────────────────────────────
+
+.center-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 0;
+  gap: 12px;
+}
+
+.muted-text {
+  color: var(--muted);
   font-size: 14px;
+  margin: 0;
+}
 
-  &.small { padding: 16px; }
-
-  p { margin: 8px 0 0; }
+.empty-inline {
+  font-size: 13px;
+  color: var(--muted);
+  padding: 12px 0;
 }
 
 .spinner {
   width: 28px;
   height: 28px;
-  border: 3px solid rgba(255,255,255,0.1);
-  border-top-color: #3b82f6;
+  border: 3px solid rgba(255,255,255,0.08);
+  border-top-color: var(--blue);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
-  margin: 0 auto;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 // ─── Responsive ───────────────────────────────────────────────────────────────
 
 @media (max-width: 500px) {
+  .friends-body { padding: 20px 16px 40px; }
   .add-form { flex-direction: column; }
-  .friend-actions { flex-direction: column; }
+  .actions { flex-wrap: wrap; }
   .friend-card { flex-wrap: wrap; }
 }

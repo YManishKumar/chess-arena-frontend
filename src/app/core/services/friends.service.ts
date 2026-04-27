@@ -10,6 +10,14 @@ export interface Friendship {
   created_at: string;
 }
 
+export interface Member {
+  id: string;
+  name: string;
+  email: string;
+  friendship_status: 'none' | 'pending_sent' | 'pending_received' | 'accepted';
+  friendship_id: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class FriendsService {
   private API = environment.apiUrl;
@@ -38,5 +46,9 @@ export class FriendsService {
     return this.http.delete<any>(`${this.API}/friends/remove`, {
       body: { user_email: userEmail, friend_email: friendEmail }
     });
+  }
+
+  getAllUsers(currentEmail: string) {
+    return this.http.get<{ users: Member[] }>(`${this.API}/users?email=${encodeURIComponent(currentEmail)}`);
   }
 }
