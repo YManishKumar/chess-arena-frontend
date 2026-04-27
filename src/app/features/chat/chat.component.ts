@@ -23,6 +23,7 @@ export class ChatComponent implements AfterViewChecked {
   messages: Message[] = [];
   input = '';
   loading = false;
+  inputFocused = false;
   private shouldScroll = false;
 
   readonly modeConfig = {
@@ -59,6 +60,11 @@ export class ChatComponent implements AfterViewChecked {
 
   private getTime(): string {
     return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  quickSend(text: string) {
+    this.input = text;
+    this.send();
   }
 
   send() {
