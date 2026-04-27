@@ -1,0 +1,47 @@
+<header class="global-header">
+  <div class="header-inner">
+
+    <!-- Logo -->
+    <a routerLink="/dashboard" class="logo" (click)="closeMenu()">
+      <span class="logo-icon">♟️</span>
+      <span class="logo-text">Chess Arena</span>
+    </a>
+
+    <!-- Desktop + Mobile Nav -->
+    <nav class="nav" [class.open]="menuOpen">
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-link" (click)="closeMenu()">
+        <span class="nav-icon">🏠</span>
+        <span>Dashboard</span>
+      </a>
+
+      <a routerLink="/friends" routerLinkActive="active" class="nav-link" (click)="closeMenu()">
+        <span class="nav-icon">👥</span>
+        <span>Friends</span>
+        <span class="badge-soon">Soon</span>
+      </a>
+
+      <a routerLink="/chat" routerLinkActive="active" class="nav-link" (click)="closeMenu()">
+        <span class="nav-icon">🤖</span>
+        <span>AI Chat</span>
+      </a>
+
+      <div class="nav-divider"></div>
+
+      <button class="nav-logout" (click)="logout()">
+        <span class="nav-icon">⏻</span>
+        <span>Logout</span>
+      </button>
+    </nav>
+
+    <!-- Hamburger -->
+    <button class="hamburger" (click)="toggleMenu()" [class.open]="menuOpen" aria-label="Toggle menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+  </div>
+
+  <!-- Mobile overlay -->
+  <div class="nav-overlay" *ngIf="menuOpen" (click)="closeMenu()"></div>
+</header>

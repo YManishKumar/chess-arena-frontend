@@ -1,16 +1,8 @@
 <div class="dashboard-wrapper">
-  <div class="dash-header">
-    <div class="dash-logo">&#9823; Chess Arena</div>
-    <div class="dash-actions">
-      <a routerLink="/chat" class="btn-chat">Open Chat</a>
-      <button class="btn-logout" (click)="logout()">Logout</button>
-    </div>
-  </div>
-
   <div class="dash-body">
     <div class="welcome">
-      <h2>Welcome back &#128075;</h2>
-      <p class="phone">{{ phone }}</p>
+      <h2>Welcome back 👋</h2>
+      <p class="email">{{ email }}</p>
     </div>
 
     <div class="stats-grid">
@@ -24,12 +16,20 @@
     <div class="quick-actions">
       <h3>Quick Start</h3>
       <a routerLink="/chat" class="action-card">
-        <span class="action-icon">&#129302;</span>
+        <span class="action-icon">🤖</span>
         <div>
           <div class="action-title">Chess AI Chat</div>
           <div class="action-sub">Coach, Fun, or Serious mode</div>
         </div>
-        <span class="action-arrow">&#8594;</span>
+        <span class="action-arrow">→</span>
+      </a>
+      <a routerLink="/friends" class="action-card">
+        <span class="action-icon">👥</span>
+        <div>
+          <div class="action-title">Friends</div>
+          <div class="action-sub">Coming soon</div>
+        </div>
+        <span class="action-arrow">→</span>
       </a>
     </div>
   </div>

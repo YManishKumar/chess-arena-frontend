@@ -1,39 +1,100 @@
 <div class="auth-wrapper">
   <div class="auth-card">
-    <div class="auth-logo">&#9823;</div>
+
+    <div class="auth-logo">♟️</div>
     <h1 class="auth-title">Chess Arena</h1>
-    <p class="auth-sub">{{ step === 'phone' ? 'Enter your phone to get started' : 'Enter the OTP sent to ' + phone }}</p>
 
-    <div *ngIf="error" class="error-msg">{{ error }}</div>
-
-    <div *ngIf="step === 'phone'" class="auth-form">
-      <input
-        [(ngModel)]="phone"
-        placeholder="+1 234 567 8900"
-        (keyup.enter)="sendOtp()"
-        type="tel"
-        class="auth-input"
-      />
-      <button class="auth-btn" (click)="sendOtp()" [disabled]="loading || !phone.trim()">
-        {{ loading ? 'Sending...' : 'Send OTP' }}
-      </button>
+    <!-- Tab switcher -->
+    <div class="tabs">
+      <button class="tab-btn" [class.active]="tab === 'login'"  (click)="switchTab('login')">Log In</button>
+      <button class="tab-btn" [class.active]="tab === 'signup'" (click)="switchTab('signup')">Sign Up</button>
     </div>
 
-    <div *ngIf="step === 'otp'" class="auth-form">
-      <input
-        [(ngModel)]="otp"
-        placeholder="Enter OTP"
-        (keyup.enter)="verify()"
-        type="text"
-        inputmode="numeric"
-        maxlength="6"
-        class="auth-input otp-input"
-        autofocus
-      />
-      <button class="auth-btn" (click)="verify()" [disabled]="loading || !otp.trim()">
-        {{ loading ? 'Verifying...' : 'Verify & Login' }}
+    <!-- Error / Success -->
+    <div *ngIf="error"   class="alert error">{{ error }}</div>
+    <div *ngIf="success" class="alert success">✓ {{ success }}</div>
+
+    <!-- ═══ LOGIN TAB ═══════════════════════════════════════════════════════ -->
+    <ng-container *ngIf="tab === 'login' && magicStep === 'hidden'">
+      <form class="auth-form" (ngSubmit)="doLogin()">
+        <div class="field">
+          <label>Email</label>
+          <input [(ngModel)]="loginEmail" name="email" type="email"
+                 placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input [(ngModel)]="loginPassword" name="password" type="password"
+                 placeholder="••••••••" autocomplete="current-password" />
+        </div>
+        <button type="submit" class="primary-btn" [disabled]="loading">
+          {{ loading ? 'Logging in...' : 'Log In' }}
+        </button>
+      </form>
+      <button class="magic-link-btn" (click)="showMagicLink()">
+        🔗 Log in with magic link instead
       </button>
-      <button class="auth-back" (click)="back()">&#8592; Back</button>
-    </div>
+    </ng-container>
+
+    <!-- ═══ MAGIC LINK INPUT ════════════════════════════════════════════════ -->
+    <ng-container *ngIf="tab === 'login' && magicStep === 'input'">
+      <div class="auth-form">
+        <div class="field">
+          <label>Email</label>
+          <input [(ngModel)]="magicEmail" type="email" placeholder="you@example.com"
+                 (keyup.enter)="sendMagicLink()" />
+        </div>
+        <button class="primary-btn" (click)="sendMagicLink()" [disabled]="loading || !magicEmail.trim()">
+          {{ loading ? 'Sending...' : 'Send Magic Link' }}
+        </button>
+        <button class="ghost-btn" (click)="hideMagicLink()">← Back to password login</button>
+      </div>
+    </ng-container>
+
+    <!-- ═══ MAGIC LINK SENT ═════════════════════════════════════════════════ -->
+    <ng-container *ngIf="tab === 'login' && magicStep === 'sent'">
+      <div class="sent-state">
+        <div class="sent-icon">📬</div>
+        <p class="sent-title">Check your inbox!</p>
+        <p class="sent-hint">Magic link sent to <strong>{{ magicEmail }}</strong></p>
+        <p class="sent-hint">Click the link to log in automatically.</p>
+        <button class="ghost-btn" (click)="hideMagicLink()">← Back</button>
+      </div>
+    </ng-container>
+
+    <!-- ═══ SIGNUP TAB ══════════════════════════════════════════════════════ -->
+    <ng-container *ngIf="tab === 'signup'">
+      <form class="auth-form" (ngSubmit)="doSignup()">
+        <div class="field">
+          <label>Full Name <span class="req">*</span></label>
+          <input [(ngModel)]="signupName" name="name" type="text"
+                 placeholder="Manish Kumar" autocomplete="name" />
+        </div>
+        <div class="field">
+          <label>Email <span class="req">*</span></label>
+          <input [(ngModel)]="signupEmail" name="email" type="email"
+                 placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div class="field">
+          <label>Phone Number</label>
+          <input [(ngModel)]="signupPhone" name="phone" type="tel"
+                 placeholder="+91 98765 43210" autocomplete="tel" />
+        </div>
+        <div class="field">
+          <label>Password <span class="req">*</span></label>
+          <input [(ngModel)]="signupPassword" name="password" type="password"
+                 placeholder="Min. 6 characters" autocomplete="new-password" />
+        </div>
+        <div class="field">
+          <label>Confirm Password <span class="req">*</span></label>
+          <input [(ngModel)]="signupConfirm" name="confirm" type="password"
+                 placeholder="Repeat password" autocomplete="new-password" />
+        </div>
+        <button type="submit" class="primary-btn" [disabled]="loading">
+          {{ loading ? 'Creating account...' : 'Create Account' }}
+        </button>
+      </form>
+    </ng-container>
+
   </div>
 </div>

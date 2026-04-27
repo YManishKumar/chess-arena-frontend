@@ -12,37 +12,106 @@ import { AuthService } from '../../../core/services/auth.service';
   styleUrls: ['./auth.component.scss']
 })
 export class AuthComponent {
-  phone = '';
-  otp = '';
-  step: 'phone' | 'otp' = 'phone';
+  tab: 'login' | 'signup' = 'login';
+
+  // Signup fields
+  signupName     = '';
+  signupEmail    = '';
+  signupPassword = '';
+  signupConfirm  = '';
+  signupPhone    = '';
+
+  // Login fields
+  loginEmail    = '';
+  loginPassword = '';
+
   loading = false;
-  error = '';
+  error   = '';
+  success = '';
+
+  // Magic link sub-flow
+  magicStep: 'hidden' | 'input' | 'sent' = 'hidden';
+  magicEmail = '';
 
   constructor(private auth: AuthService, private router: Router) {}
 
-  sendOtp() {
-    if (!this.phone.trim()) return;
-    this.loading = true;
+  switchTab(t: 'login' | 'signup') {
+    this.tab = t;
     this.error = '';
-    this.auth.sendOtp(this.phone).subscribe({
-      next: () => { this.step = 'otp'; this.loading = false; },
-      error: (e: any) => { this.error = e?.error?.detail || 'Failed to send OTP'; this.loading = false; }
+    this.success = '';
+    this.magicStep = 'hidden';
+  }
+
+  // ─── Sign Up ────────────────────────────────────────────────────────────────
+
+  doSignup() {
+    this.error = '';
+    if (!this.signupName.trim() || !this.signupEmail.trim() || !this.signupPassword.trim()) {
+      this.error = 'Name, email and password are required'; return;
+    }
+    if (this.signupPassword.length < 6) {
+      this.error = 'Password must be at least 6 characters'; return;
+    }
+    if (this.signupPassword !== this.signupConfirm) {
+      this.error = 'Passwords do not match'; return;
+    }
+    this.loading = true;
+    this.auth.signup(this.signupName, this.signupEmail, this.signupPassword, this.signupPhone).subscribe({
+      next: (res) => {
+        this.loading = false;
+        if (res?.token) {
+          this.router.navigate(['/dashboard']);
+        } else {
+          this.success = 'Account created! Check your email to confirm, then log in.';
+        }
+      },
+      error: (e: any) => {
+        this.error = e?.error?.detail || 'Signup failed';
+        this.loading = false;
+      }
     });
   }
 
-  verify() {
-    if (!this.otp.trim()) return;
-    this.loading = true;
+  // ─── Login ──────────────────────────────────────────────────────────────────
+
+  doLogin() {
     this.error = '';
-    this.auth.verifyOtp(this.phone, this.otp).subscribe({
-      next: () => { this.loading = false; this.router.navigate(['/chat']); },
-      error: (e: any) => { this.error = e?.error?.detail || 'Invalid OTP'; this.loading = false; }
+    if (!this.loginEmail.trim() || !this.loginPassword.trim()) {
+      this.error = 'Email and password are required'; return;
+    }
+    this.loading = true;
+    this.auth.login(this.loginEmail, this.loginPassword).subscribe({
+      next: () => { this.loading = false; this.router.navigate(['/dashboard']); },
+      error: (e: any) => {
+        this.error = e?.error?.detail || 'Invalid email or password';
+        this.loading = false;
+      }
     });
   }
 
-  back() {
-    this.step = 'phone';
-    this.otp = '';
+  // ─── Magic Link ─────────────────────────────────────────────────────────────
+
+  showMagicLink() {
+    this.magicStep = 'input';
+    this.magicEmail = this.loginEmail;
+    this.error = '';
+  }
+
+  sendMagicLink() {
+    if (!this.magicEmail.trim()) return;
+    this.loading = true;
+    this.error = '';
+    this.auth.sendOtp(this.magicEmail).subscribe({
+      next: () => { this.magicStep = 'sent'; this.loading = false; },
+      error: (e: any) => {
+        this.error = e?.error?.detail || 'Failed to send magic link';
+        this.loading = false;
+      }
+    });
+  }
+
+  hideMagicLink() {
+    this.magicStep = 'hidden';
     this.error = '';
   }
 }

@@ -3,9 +3,11 @@
 .chat-wrapper {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  flex: 1;
+  height: 100%;
   background: #0b1a2f;
   color: #fff;
+  overflow: hidden;
 }
 
 // ─── Header ──────────────────────────────────────────────────────────────────

@@ -11,7 +11,7 @@ import { AuthService } from '../../core/services/auth.service';
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent {
-  phone: string;
+  email: string;
 
   stats = [
     { label: 'Games Played', value: '0', icon: '&#9823;' },
@@ -20,11 +20,7 @@ export class DashboardComponent {
     { label: 'AI Chats', value: '0', icon: '&#129302;' },
   ];
 
-  constructor(private auth: AuthService) {
-    this.phone = auth.getPhone();
-  }
-
-  logout() {
-    this.auth.logout();
+  constructor(auth: AuthService) {
+    this.email = auth.getEmail();
   }
 }

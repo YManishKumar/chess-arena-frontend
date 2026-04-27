@@ -1,48 +1,8 @@
 .dashboard-wrapper {
-  min-height: 100vh;
+  flex: 1;
+  overflow-y: auto;
   background: #0b1a2f;
   color: #fff;
-}
-
-.dash-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 24px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  background: rgba(0,0,0,0.2);
-}
-
-.dash-logo {
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.dash-actions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.btn-chat {
-  padding: 8px 16px;
-  background: #3b82f6;
-  color: #fff;
-  border-radius: 8px;
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.btn-logout {
-  padding: 8px 16px;
-  background: transparent;
-  color: rgba(255,255,255,0.5);
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 8px;
-  font-size: 13px;
-  cursor: pointer;
-  &:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
 }
 
 .dash-body {
@@ -55,7 +15,7 @@
   margin-bottom: 32px;
 
   h2 { font-size: 28px; margin: 0 0 6px; }
-  .phone { color: rgba(255,255,255,0.4); font-size: 14px; margin: 0; }
+  .email { color: rgba(255,255,255,0.4); font-size: 14px; margin: 0; }
 }
 
 .stats-grid {
@@ -83,6 +43,9 @@
 
 .quick-actions {
   h3 { font-size: 16px; font-weight: 600; margin: 0 0 14px; color: rgba(255,255,255,0.7); }
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .action-card {

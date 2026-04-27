@@ -1,0 +1,241 @@
+.friends-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  background: #0b1a2f;
+  color: #fff;
+}
+
+.friends-body {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+// ─── Page Header ─────────────────────────────────────────────────────────────
+
+.page-header {
+  h2 { font-size: 26px; font-weight: 700; margin: 0 0 6px; }
+  .page-sub { font-size: 14px; color: rgba(255,255,255,0.4); margin: 0; }
+}
+
+// ─── Add Friend Card ──────────────────────────────────────────────────────────
+
+.add-card {
+  background: #0f2647;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 20px;
+
+  h3 { font-size: 15px; font-weight: 600; margin: 0 0 14px; color: rgba(255,255,255,0.7); }
+}
+
+.add-form {
+  display: flex;
+  gap: 10px;
+}
+
+.add-input {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.18s;
+
+  &::placeholder { color: rgba(255,255,255,0.3); }
+  &:focus { border-color: rgba(255,255,255,0.3); }
+  &:disabled { opacity: 0.5; }
+}
+
+.add-btn {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  background: #3b82f6;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+
+  &:hover:not(:disabled) { background: #2563eb; }
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
+}
+
+.msg {
+  font-size: 13px;
+  margin: 10px 0 0;
+  &.error  { color: #f87171; }
+  &.success { color: #34d399; }
+}
+
+// ─── Sections ─────────────────────────────────────────────────────────────────
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.55);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.count-badge {
+  background: rgba(59,130,246,0.2);
+  color: #60a5fa;
+  border-radius: 20px;
+  padding: 1px 8px;
+  font-size: 12px;
+  font-weight: 700;
+
+  &.muted {
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.35);
+  }
+}
+
+// ─── Friend Cards ─────────────────────────────────────────────────────────────
+
+.friend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.friend-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: #0f2647;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  transition: border-color 0.15s;
+
+  &:hover { border-color: rgba(255,255,255,0.15); }
+
+  &.pending-card { border-color: rgba(245,158,11,0.25); }
+  &.muted-card   { opacity: 0.65; }
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #1e3a5f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #60a5fa;
+  flex-shrink: 0;
+
+  &.online { background: rgba(16,185,129,0.15); color: #34d399; }
+  &.muted  { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.3); }
+}
+
+.friend-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.friend-email {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.friend-meta {
+  font-size: 12px;
+  color: rgba(255,255,255,0.35);
+
+  &.status-accepted { color: #34d399; }
+}
+
+.friend-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btn-accept {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #10b981;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  &:hover { background: #059669; }
+}
+
+.btn-remove {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(239,68,68,0.25);
+  background: transparent;
+  color: rgba(239,68,68,0.7);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+  &:hover { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.5); color: #f87171; }
+}
+
+// ─── Empty / Loading ──────────────────────────────────────────────────────────
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: rgba(255,255,255,0.3);
+  font-size: 14px;
+
+  &.small { padding: 16px; }
+
+  p { margin: 8px 0 0; }
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(255,255,255,0.1);
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// ─── Responsive ───────────────────────────────────────────────────────────────
+
+@media (max-width: 500px) {
+  .add-form { flex-direction: column; }
+  .friend-actions { flex-direction: column; }
+  .friend-card { flex-wrap: wrap; }
+}
