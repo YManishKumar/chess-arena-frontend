@@ -28,6 +28,10 @@ export const routes: Routes = [
       {
         path: 'friends',
         loadComponent: () => import('./features/friends/friends.component').then(m => m.FriendsComponent)
+      },
+      {
+        path: 'play',
+        loadComponent: () => import('./features/play/play.component').then(m => m.PlayComponent)
       }
     ]
   },

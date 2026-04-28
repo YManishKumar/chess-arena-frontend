@@ -1,0 +1,296 @@
+$cell: 60px;
+
+.play-wrapper {
+  min-height: 100%;
+  background: #0b1a2f;
+  padding: 24px;
+  color: #fff;
+}
+
+.play-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.play-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.status-badge {
+  background: rgba(59,130,246,0.15);
+  border: 1px solid rgba(59,130,246,0.3);
+  color: #60a5fa;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+
+  &.check  { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.4); color: #f87171; }
+  &.over   { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.4); color: #6ee7b7; }
+}
+
+// ─── Layout ──────────────────────────────────────────────────────────────────
+
+.play-layout {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+// ─── Board ───────────────────────────────────────────────────────────────────
+
+.board-container {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.rank-labels {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  height: $cell * 8;
+
+  span {
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    font-weight: 600;
+    text-align: center;
+    width: 14px;
+    line-height: $cell;
+  }
+}
+
+.board-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.board {
+  display: grid;
+  grid-template-rows: repeat(8, $cell);
+  border: 2px solid rgba(255,255,255,0.12);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.6);
+}
+
+.board-row {
+  display: grid;
+  grid-template-columns: repeat(8, $cell);
+}
+
+.file-labels {
+  display: flex;
+  width: $cell * 8;
+  justify-content: space-around;
+
+  span {
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    font-weight: 600;
+    text-align: center;
+    width: $cell;
+  }
+}
+
+// ─── Cell ────────────────────────────────────────────────────────────────────
+
+.cell {
+  width: $cell;
+  height: $cell;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: filter 0.1s;
+
+  &.light    { background: #c8d8e8; }
+  &.dark     { background: #1e3f6b; }
+
+  &.selected { background: #f6f669 !important; }
+
+  &.last-move.light { background: #cdd69b; }
+  &.last-move.dark  { background: #a8b56e; }
+
+  &.in-check { background: #e05252 !important; }
+
+  &:hover { filter: brightness(1.12); }
+}
+
+// ─── Pieces ──────────────────────────────────────────────────────────────────
+
+.piece {
+  font-size: 42px;
+  line-height: 1;
+  user-select: none;
+  cursor: pointer;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+  transition: transform 0.1s;
+  display: block;
+  text-align: center;
+
+  .cell:hover & { transform: scale(1.08); }
+}
+
+// ─── Legal move dots ─────────────────────────────────────────────────────────
+
+.legal-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.25);
+  pointer-events: none;
+}
+
+.cell.legal-capture::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 4px solid rgba(0,0,0,0.25);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+// ─── Sidebar ─────────────────────────────────────────────────────────────────
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 200px;
+  flex: 1;
+}
+
+.panel {
+  background: #0f2647;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.panel-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin: 0 0 12px;
+}
+
+.color-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.color-btn {
+  flex: 1;
+  padding: 9px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(255,255,255,0.1);
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+
+  &.active {
+    border-color: #3b82f6;
+    background: rgba(59,130,246,0.15);
+    color: #fff;
+  }
+  &:not(.active):hover { border-color: rgba(255,255,255,0.25); color: rgba(255,255,255,0.8); }
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ctrl-btn {
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.7);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  text-align: left;
+
+  &:hover:not(:disabled) { background: rgba(255,255,255,0.08); color: #fff; }
+  &:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  &.danger {
+    border-color: rgba(239,68,68,0.2);
+    color: rgba(239,68,68,0.7);
+    &:hover { background: rgba(239,68,68,0.1); color: #f87171; border-color: rgba(239,68,68,0.4); }
+  }
+}
+
+// ─── Move history ────────────────────────────────────────────────────────────
+
+.moves-panel { max-height: 320px; overflow: hidden; display: flex; flex-direction: column; }
+
+.moves-grid {
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 32px 1fr 1fr;
+  gap: 4px 4px;
+  align-items: center;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+}
+
+.move-num {
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+  font-weight: 600;
+  grid-column: 1;
+}
+
+.move-text {
+  font-size: 13px;
+  font-family: 'Courier New', monospace;
+  color: #e2e8f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.04);
+
+  &.black-move { color: #93c5fd; }
+}
+
+.no-moves {
+  font-size: 13px;
+  color: rgba(255,255,255,0.25);
+  margin: 0;
+  text-align: center;
+  padding: 8px 0;
+}
+
+// ─── Responsive ──────────────────────────────────────────────────────────────
+
+@media (max-width: 640px) {
+  $cell-sm: 42px;
+
+  .play-wrapper { padding: 12px; }
+
+  .board { grid-template-rows: repeat(8, $cell-sm); }
+  .board-row { grid-template-columns: repeat(8, $cell-sm); }
+  .rank-labels span { line-height: $cell-sm; }
+  .file-labels { width: $cell-sm * 8; }
+  .file-labels span, .cell { width: $cell-sm; height: $cell-sm; }
+  .piece { font-size: 28px; }
+  .sidebar { min-width: 100%; }
+}

@@ -1,0 +1,81 @@
+<div class="play-wrapper">
+
+  <div class="play-header">
+    <h2 class="play-title">♟️ Chess Board</h2>
+    <span class="status-badge" [class.check]="gameStatus.includes('check')" [class.over]="isGameOver()">
+      {{ gameStatus }}
+    </span>
+  </div>
+
+  <div class="play-layout">
+
+    <!-- Board -->
+    <div class="board-container">
+      <div class="rank-labels">
+        <span *ngFor="let r of displayRanks">{{ r }}</span>
+      </div>
+      <div class="board-col">
+        <div class="board">
+          <div class="board-row" *ngFor="let row of displayBoard">
+            <div
+              class="cell"
+              *ngFor="let cell of row"
+              [class.light]="cell.isLight"
+              [class.dark]="!cell.isLight"
+              [class.selected]="cell.isSelected"
+              [class.legal-move]="cell.isLegalMove && !cell.piece"
+              [class.legal-capture]="cell.isLegalMove && cell.piece"
+              [class.last-move]="cell.isLastMove"
+              [class.in-check]="cell.isCheck"
+              (click)="clickSquare(cell.square)">
+              <span class="piece" *ngIf="cell.piece">{{ pieceSymbol(cell.piece) }}</span>
+              <span class="legal-dot" *ngIf="cell.isLegalMove && !cell.piece"></span>
+            </div>
+          </div>
+        </div>
+        <div class="file-labels">
+          <span *ngFor="let f of displayFiles">{{ f }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+      <!-- Color picker -->
+      <div class="panel">
+        <h3 class="panel-title">Play as</h3>
+        <div class="color-btns">
+          <button class="color-btn" [class.active]="playerColor === 'w'" (click)="playAs('w')">⬜ White</button>
+          <button class="color-btn" [class.active]="playerColor === 'b'" (click)="playAs('b')">⬛ Black</button>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="panel">
+        <h3 class="panel-title">Controls</h3>
+        <div class="controls">
+          <button class="ctrl-btn" (click)="undoMove()" [disabled]="moveHistory.length === 0">↩ Undo</button>
+          <button class="ctrl-btn" (click)="flipBoard()">🔄 Flip Board</button>
+          <button class="ctrl-btn danger" (click)="resetGame()">↺ New Game</button>
+        </div>
+      </div>
+
+      <!-- Move history -->
+      <div class="panel moves-panel">
+        <h3 class="panel-title">Move History</h3>
+        <div class="moves-grid" *ngIf="moveHistory.length > 0; else noMoves">
+          <ng-container *ngFor="let move of moveHistory; let i = index">
+            <span class="move-num" *ngIf="i % 2 === 0">{{ (i / 2) + 1 }}.</span>
+            <span class="move-text" [class.black-move]="i % 2 !== 0">{{ move }}</span>
+          </ng-container>
+        </div>
+        <ng-template #noMoves>
+          <p class="no-moves">No moves yet</p>
+        </ng-template>
+      </div>
+
+    </div>
+  </div>
+
+</div>
