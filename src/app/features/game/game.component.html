@@ -1,0 +1,195 @@
+<!-- Loading -->
+<div class="game-loading" *ngIf="loading">
+  <div class="spinner" style="width:40px;height:40px;border-width:3px;"></div>
+  <p>Loading game…</p>
+</div>
+
+<div class="game-shell" *ngIf="!loading && game">
+
+  <!-- ---- Left sidebar ---- -->
+  <div class="sidebar sidebar-left">
+
+    <!-- Game info -->
+    <div class="game-info-card glass-card">
+      <div class="game-info-row">
+        <div class="player-chip">
+          <div class="avatar avatar-sm">W</div>
+          <div class="player-name">White</div>
+          <div class="turn-dot" *ngIf="game.turn === 'white'"></div>
+        </div>
+        <div class="vs-label">VS</div>
+        <div class="player-chip">
+          <div class="turn-dot" *ngIf="game.turn === 'black'"></div>
+          <div class="player-name">Black</div>
+          <div class="avatar avatar-sm" style="background: linear-gradient(135deg,#2d2d3a,#1a1a28); color:#aaa;">B</div>
+        </div>
+      </div>
+      <div class="game-status-badge" [class.check]="gameStatus.includes('check')"
+           [class.over]="isGameOver">
+        {{ gameStatus }}
+      </div>
+    </div>
+
+    <!-- Move history -->
+    <div class="moves-card glass-card">
+      <div class="moves-header">Move History</div>
+      <div class="moves-table">
+        <div class="move-row" *ngFor="let pair of movePairs; let i = index">
+          <span class="move-num">{{ i + 1 }}.</span>
+          <span class="move-san" [class.last]="i * 2 === moveHistory.length - 1 || i * 2 === moveHistory.length - 2">
+            {{ pair[0] }}
+          </span>
+          <span class="move-san" [class.last]="i * 2 + 1 === moveHistory.length - 1">
+            {{ pair[1] }}
+          </span>
+        </div>
+        <div class="moves-empty" *ngIf="moveHistory.length === 0">
+          <span>No moves yet</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ---- Chess board ---- -->
+  <div class="board-container">
+
+    <!-- Status flash -->
+    <div class="status-flash" [class.active]="lastMoveFlash">
+      Move played
+    </div>
+
+    <!-- Board wrapper -->
+    <div class="board-outer" [class.flipped]="isFlipped">
+
+      <!-- Rank labels -->
+      <div class="rank-labels">
+        <div class="rank-label" *ngFor="let r of displayRanks">{{ r }}</div>
+      </div>
+
+      <!-- Squares -->
+      <div class="board-grid">
+        <div *ngFor="let row of displayBoard">
+          <div *ngFor="let cell of row"
+               class="cell"
+               [class.light]="cell.isLight"
+               [class.dark]="!cell.isLight"
+               [class.selected]="cell.isSelected"
+               [class.legal-move]="cell.isLegalMove && !cell.piece"
+               [class.legal-capture]="cell.isLegalMove && !!cell.piece"
+               [class.last-move]="cell.isLastMove"
+               [class.in-check]="cell.isCheck"
+               (click)="clickSquare(cell)">
+            <span class="piece-glyph" *ngIf="cell.piece"
+                  [class.white-piece]="cell.piece.color === 'w'">
+              {{ pieceSymbol(cell.piece) }}
+            </span>
+            <div class="legal-dot" *ngIf="cell.isLegalMove && !cell.piece"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- File labels -->
+      <div class="file-labels">
+        <div class="file-label" *ngFor="let f of displayFiles">{{ f }}</div>
+      </div>
+    </div>
+
+    <!-- Board controls -->
+    <div class="board-controls">
+      <button class="btn btn-ghost btn-sm" (click)="flipBoard()" title="Flip board">⇅ Flip</button>
+      <button class="btn btn-gold btn-sm" (click)="getHint()" [disabled]="hintLoading || isGameOver">
+        <span *ngIf="!hintLoading">⚡ Hint</span>
+        <span class="spinner" *ngIf="hintLoading"></span>
+      </button>
+      <button class="btn btn-ghost btn-sm" (click)="explainLastMove()" [disabled]="explainLoading || moveHistory.length === 0">
+        <span *ngIf="!explainLoading">◎ Explain</span>
+        <span class="spinner" *ngIf="explainLoading"></span>
+      </button>
+      <button class="btn btn-danger btn-sm resign-btn" (click)="tryResign()" *ngIf="!isGameOver">
+        ⚑ Resign
+      </button>
+      <a routerLink="/friends" class="btn btn-ghost btn-sm" *ngIf="isGameOver">
+        ← Back
+      </a>
+    </div>
+
+    <!-- Resign confirmation -->
+    <div class="resign-confirm glass-card" *ngIf="resignConfirm">
+      <p>Resign this game? You'll lose 10 points.</p>
+      <div class="resign-confirm-btns">
+        <button class="btn btn-danger btn-sm" (click)="confirmResign()">Yes, resign</button>
+        <button class="btn btn-ghost btn-sm" (click)="cancelResign()">Cancel</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ---- Right sidebar — AI Coach ---- -->
+  <div class="sidebar sidebar-right">
+
+    <div class="coach-card glass-card">
+      <div class="coach-header" (click)="toggleCoach()">
+        <span class="coach-title">AI Coach</span>
+        <span class="coach-toggle">{{ coachOpen ? '▲' : '▼' }}</span>
+      </div>
+
+      <div class="coach-body" *ngIf="coachOpen">
+
+        <div class="ai-error" *ngIf="aiError">
+          <span>⚠</span> {{ aiError }}
+        </div>
+
+        <!-- Hint result -->
+        <div class="hint-panel" *ngIf="hintResult">
+          <div class="hint-move">
+            <span class="hint-label">Best Move</span>
+            <span class="hint-value">{{ hintResult.best_move }}</span>
+          </div>
+          <div class="hint-analysis">{{ hintResult.analysis }}</div>
+          <div class="hint-explain">{{ hintResult.explanation }}</div>
+        </div>
+
+        <!-- Explain result -->
+        <div class="explain-panel" *ngIf="explainResult">
+          <div class="explain-header">
+            <span class="hint-label">Explaining</span>
+            <span class="explain-move">{{ lastExplainedMove }}</span>
+          </div>
+          <div class="hint-analysis">{{ explainResult }}</div>
+        </div>
+
+        <!-- Loading -->
+        <div class="coach-loading" *ngIf="hintLoading || explainLoading">
+          <div class="spinner"></div>
+          <span>Analysing position…</span>
+        </div>
+
+        <div class="coach-cta" *ngIf="!hintResult && !explainResult && !hintLoading && !explainLoading && !aiError">
+          <p>Use <strong>Hint</strong> to get the best move, or <strong>Explain</strong> to understand the last move.</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Game over panel -->
+    <div class="gameover-card glass-card" *ngIf="isGameOver">
+      <div class="gameover-icon">{{ game.status === 'draw' ? '🤝' : '♔' }}</div>
+      <div class="gameover-title">{{ gameStatus }}</div>
+      <div class="gameover-sub">
+        <span *ngIf="game.status === 'checkmate'">Points awarded</span>
+        <span *ngIf="game.status === 'draw'">No points change</span>
+        <span *ngIf="game.status === 'resigned'">−10 pts to resigner</span>
+      </div>
+      <a routerLink="/friends" class="btn btn-primary">← Back to Friends</a>
+    </div>
+
+    <!-- Move pending indicator -->
+    <div class="pending-card" *ngIf="movePending">
+      <div class="spinner"></div>
+      <span>Sending move…</span>
+    </div>
+
+  </div>
+
+</div>

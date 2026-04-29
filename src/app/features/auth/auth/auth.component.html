@@ -1,8 +1,9 @@
 <div class="auth-wrapper">
   <div class="auth-card">
 
-    <div class="auth-logo">♟️</div>
+    <span class="auth-logo">♟</span>
     <h1 class="auth-title">Chess Arena</h1>
+    <p class="auth-tagline">Play · Compete · Conquer</p>
 
     <!-- Tab switcher -->
     <div class="tabs">
@@ -14,7 +15,7 @@
     <div *ngIf="error"   class="alert error">{{ error }}</div>
     <div *ngIf="success" class="alert success">✓ {{ success }}</div>
 
-    <!-- ═══ LOGIN TAB ═══════════════════════════════════════════════════════ -->
+    <!-- ═══ LOGIN ═══ -->
     <ng-container *ngIf="tab === 'login' && magicStep === 'hidden'">
       <form class="auth-form" (ngSubmit)="doLogin()">
         <div class="field">
@@ -28,15 +29,15 @@
                  placeholder="••••••••" autocomplete="current-password" />
         </div>
         <button type="submit" class="primary-btn" [disabled]="loading">
-          {{ loading ? 'Logging in...' : 'Log In' }}
+          {{ loading ? 'Logging in…' : 'Log In' }}
         </button>
       </form>
       <button class="magic-link-btn" (click)="showMagicLink()">
-        🔗 Log in with magic link instead
+        ⚡ Log in with magic link
       </button>
     </ng-container>
 
-    <!-- ═══ MAGIC LINK INPUT ════════════════════════════════════════════════ -->
+    <!-- ═══ MAGIC LINK INPUT ═══ -->
     <ng-container *ngIf="tab === 'login' && magicStep === 'input'">
       <div class="auth-form">
         <div class="field">
@@ -45,30 +46,30 @@
                  (keyup.enter)="sendMagicLink()" />
         </div>
         <button class="primary-btn" (click)="sendMagicLink()" [disabled]="loading || !magicEmail.trim()">
-          {{ loading ? 'Sending...' : 'Send Magic Link' }}
+          {{ loading ? 'Sending…' : 'Send Magic Link' }}
         </button>
-        <button class="ghost-btn" (click)="hideMagicLink()">← Back to password login</button>
+        <button class="ghost-btn" (click)="hideMagicLink()">← Back to password</button>
       </div>
     </ng-container>
 
-    <!-- ═══ MAGIC LINK SENT ═════════════════════════════════════════════════ -->
+    <!-- ═══ MAGIC LINK SENT ═══ -->
     <ng-container *ngIf="tab === 'login' && magicStep === 'sent'">
       <div class="sent-state">
         <div class="sent-icon">📬</div>
         <p class="sent-title">Check your inbox!</p>
         <p class="sent-hint">Magic link sent to <strong>{{ magicEmail }}</strong></p>
-        <p class="sent-hint">Click the link to log in automatically.</p>
+        <p class="sent-hint">Click the link to sign in automatically.</p>
         <button class="ghost-btn" (click)="hideMagicLink()">← Back</button>
       </div>
     </ng-container>
 
-    <!-- ═══ SIGNUP TAB ══════════════════════════════════════════════════════ -->
+    <!-- ═══ SIGNUP ═══ -->
     <ng-container *ngIf="tab === 'signup'">
       <form class="auth-form" (ngSubmit)="doSignup()">
         <div class="field">
           <label>Full Name <span class="req">*</span></label>
           <input [(ngModel)]="signupName" name="name" type="text"
-                 placeholder="Manish Kumar" autocomplete="name" />
+                 placeholder="Your name" autocomplete="name" />
         </div>
         <div class="field">
           <label>Email <span class="req">*</span></label>
@@ -76,9 +77,9 @@
                  placeholder="you@example.com" autocomplete="email" />
         </div>
         <div class="field">
-          <label>Phone Number</label>
+          <label>Phone (optional)</label>
           <input [(ngModel)]="signupPhone" name="phone" type="tel"
-                 placeholder="+91 98765 43210" autocomplete="tel" />
+                 placeholder="+1 555 123 4567" autocomplete="tel" />
         </div>
         <div class="field">
           <label>Password <span class="req">*</span></label>
@@ -91,7 +92,7 @@
                  placeholder="Repeat password" autocomplete="new-password" />
         </div>
         <button type="submit" class="primary-btn" [disabled]="loading">
-          {{ loading ? 'Creating account...' : 'Create Account' }}
+          {{ loading ? 'Creating account…' : 'Create Account · Get 30 pts' }}
         </button>
       </form>
     </ng-container>

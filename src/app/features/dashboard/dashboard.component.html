@@ -1,36 +1,115 @@
-<div class="dashboard-wrapper">
-  <div class="dash-body">
-    <div class="welcome">
-      <h2>Welcome back 👋</h2>
-      <p class="email">{{ email }}</p>
+<div class="dashboard">
+
+  <!-- Hero section -->
+  <div class="hero animate-fade-up">
+    <div class="hero-avatar">
+      <div class="avatar avatar-xl">{{ initials }}</div>
+      <div class="online-ring"></div>
+    </div>
+    <div class="hero-info">
+      <h1 class="hero-greeting">Welcome back,</h1>
+      <h2 class="hero-name">{{ name || email }}</h2>
+      <div class="hero-badges">
+        <div class="points-display">
+          <span class="pts-icon">◆</span>
+          <span class="pts-num">{{ points }}</span>
+          <span class="pts-label">POINTS</span>
+        </div>
+        <div class="rank-badge" [class]="rankClass">{{ rank }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats grid -->
+  <div class="stats-grid">
+    <div class="stat-card animate-fade-up delay-1" *ngFor="let s of stats; let i = index">
+      <div class="stat-glow" [style.background]="s.glow"></div>
+      <div class="stat-icon" [style.color]="s.color">{{ s.icon }}</div>
+      <div class="stat-value" [style.color]="s.color">{{ s.value }}</div>
+      <div class="stat-label">{{ s.label }}</div>
+      <div class="stat-trend" *ngIf="s.trend">{{ s.trend }}</div>
+    </div>
+  </div>
+
+  <!-- Quick actions + Recent games -->
+  <div class="bottom-grid">
+
+    <!-- Quick actions -->
+    <div class="quick-actions glass-card animate-fade-up delay-2">
+      <div class="section-header">
+        <h3 class="section-title">Quick Start</h3>
+      </div>
+
+      <a routerLink="/play" class="action-item">
+        <div class="action-icon-wrap" style="background: rgba(108,99,255,0.15); border-color: rgba(108,99,255,0.3);">
+          <span>♟</span>
+        </div>
+        <div class="action-text">
+          <div class="action-title">Practice Solo</div>
+          <div class="action-sub">Play vs yourself · AI coach hints</div>
+        </div>
+        <span class="action-arrow">→</span>
+      </a>
+
+      <a routerLink="/friends" class="action-item">
+        <div class="action-icon-wrap" style="background: rgba(38,222,129,0.15); border-color: rgba(38,222,129,0.3);">
+          <span>◈</span>
+        </div>
+        <div class="action-text">
+          <div class="action-title">Challenge a Friend</div>
+          <div class="action-sub">Send a game invite · Live board</div>
+        </div>
+        <span class="action-arrow">→</span>
+      </a>
+
+      <a routerLink="/chat" class="action-item">
+        <div class="action-icon-wrap" style="background: rgba(247,183,49,0.15); border-color: rgba(247,183,49,0.3);">
+          <span>◎</span>
+        </div>
+        <div class="action-text">
+          <div class="action-title">AI Coach</div>
+          <div class="action-sub">Coach · Fun · Serious modes</div>
+        </div>
+        <span class="action-arrow">→</span>
+      </a>
     </div>
 
-    <div class="stats-grid">
-      <div *ngFor="let s of stats" class="stat-card">
-        <div class="stat-icon" [innerHTML]="s.icon"></div>
-        <div class="stat-value">{{ s.value }}</div>
-        <div class="stat-label">{{ s.label }}</div>
+    <!-- Recent games -->
+    <div class="recent-games glass-card animate-fade-up delay-3">
+      <div class="section-header">
+        <h3 class="section-title">Recent Games</h3>
+        <a routerLink="/friends" class="section-link">View All →</a>
+      </div>
+
+      <div class="loading-state" *ngIf="gamesLoading">
+        <div class="skeleton" style="height:52px; border-radius:10px; margin-bottom:8px;"></div>
+        <div class="skeleton" style="height:52px; border-radius:10px; margin-bottom:8px;"></div>
+        <div class="skeleton" style="height:52px; border-radius:10px;"></div>
+      </div>
+
+      <div class="empty-state" *ngIf="!gamesLoading && recentGames.length === 0">
+        <span class="empty-icon">♟</span>
+        <p>No games yet</p>
+        <a routerLink="/friends" class="btn btn-primary btn-sm">Challenge a Friend</a>
+      </div>
+
+      <div class="game-item" *ngFor="let g of recentGames">
+        <div class="game-indicator" [class]="getGameResult(g)"></div>
+        <div class="game-info">
+          <div class="game-vs">vs {{ getOpponent(g) }}</div>
+          <div class="game-meta">{{ formatStatus(g.status) }} · {{ formatDate(g.created_at) }}</div>
+        </div>
+        <div class="game-result-badge" [class]="getGameResult(g)">
+          {{ getGameResultLabel(g) }}
+        </div>
       </div>
     </div>
 
-    <div class="quick-actions">
-      <h3>Quick Start</h3>
-      <a routerLink="/chat" class="action-card">
-        <span class="action-icon">🤖</span>
-        <div>
-          <div class="action-title">Chess AI Chat</div>
-          <div class="action-sub">Coach, Fun, or Serious mode</div>
-        </div>
-        <span class="action-arrow">→</span>
-      </a>
-      <a routerLink="/friends" class="action-card">
-        <span class="action-icon">👥</span>
-        <div>
-          <div class="action-title">Friends</div>
-          <div class="action-sub">Coming soon</div>
-        </div>
-        <span class="action-arrow">→</span>
-      </a>
-    </div>
   </div>
+
+  <!-- Decorative floating pieces -->
+  <div class="deco-piece p1 animate-float" style="animation-delay:0s">♜</div>
+  <div class="deco-piece p2 animate-float" style="animation-delay:1.2s">♛</div>
+  <div class="deco-piece p3 animate-float" style="animation-delay:0.6s">♞</div>
+
 </div>

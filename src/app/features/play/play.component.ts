@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Chess, Square, Piece } from 'chess.js';
+import { AiCoachService, HintResponse } from '../../core/services/ai-coach.service';
+import { AuthService } from '../../core/services/auth.service';
 
 interface Cell {
   square: Square;
@@ -22,19 +24,29 @@ interface Cell {
 export class PlayComponent implements OnInit {
   private chess = new Chess();
 
-  board: Cell[][] = [];
+  board: Cell[][]    = [];
   moveHistory: string[] = [];
   selectedSquare: Square | null = null;
-  legalMoves: Square[] = [];
+  legalMoves: Square[]          = [];
   lastMove: { from: Square; to: Square } | null = null;
-  isFlipped = false;
+  isFlipped    = false;
   playerColor: 'w' | 'b' = 'w';
-  gameStatus = '';
+  gameStatus   = '';
+
+  // AI Coach
+  hintLoading    = false;
+  explainLoading = false;
+  hintResult: HintResponse | null = null;
+  explainResult  = '';
+  lastExplainMove = '';
+  aiError         = '';
 
   readonly PIECES: Record<string, string> = {
-    'wK': '♔', 'wQ': '♕', 'wR': '♖', 'wB': '♗', 'wN': '♘', 'wP': '♙',
-    'bK': '♚', 'bQ': '♛', 'bR': '♜', 'bB': '♝', 'bN': '♞', 'bP': '♟',
+    'wK':'♔','wQ':'♕','wR':'♖','wB':'♗','wN':'♘','wP':'♙',
+    'bK':'♚','bQ':'♛','bR':'♜','bB':'♝','bN':'♞','bP':'♟',
   };
+
+  constructor(private aiCoach: AiCoachService, private auth: AuthService) {}
 
   ngOnInit() {
     this.renderBoard();
@@ -42,22 +54,22 @@ export class PlayComponent implements OnInit {
   }
 
   renderBoard() {
-    const files = ['a','b','c','d','e','f','g','h'];
-    const ranks = [8,7,6,5,4,3,2,1];
-    const checkSquare = this.getCheckSquare();
+    const files  = ['a','b','c','d','e','f','g','h'];
+    const ranks  = [8,7,6,5,4,3,2,1];
+    const checkSq = this.getCheckSquare();
 
     this.board = ranks.map((rank, ri) =>
       files.map((file, fi) => {
-        const square = `${file}${rank}` as Square;
-        const piece = this.chess.get(square);
+        const sq    = `${file}${rank}` as Square;
+        const piece = this.chess.get(sq);
         return {
-          square,
+          square: sq,
           piece: piece || null,
-          isLight: (ri + fi) % 2 === 0,
-          isSelected: this.selectedSquare === square,
-          isLegalMove: this.legalMoves.includes(square),
-          isLastMove: !!(this.lastMove && (this.lastMove.from === square || this.lastMove.to === square)),
-          isCheck: square === checkSquare,
+          isLight:     (ri + fi) % 2 === 0,
+          isSelected:  this.selectedSquare === sq,
+          isLegalMove: this.legalMoves.includes(sq),
+          isLastMove:  !!(this.lastMove && (this.lastMove.from === sq || this.lastMove.to === sq)),
+          isCheck:     sq === checkSq,
         };
       })
     );
@@ -66,66 +78,64 @@ export class PlayComponent implements OnInit {
   getCheckSquare(): Square | null {
     if (!this.chess.inCheck()) return null;
     const turn = this.chess.turn();
-    for (const rank of [1,2,3,4,5,6,7,8]) {
-      for (const file of ['a','b','c','d','e','f','g','h']) {
-        const sq = `${file}${rank}` as Square;
-        const p = this.chess.get(sq);
+    for (const r of [1,2,3,4,5,6,7,8])
+      for (const f of ['a','b','c','d','e','f','g','h']) {
+        const sq = `${f}${r}` as Square;
+        const p  = this.chess.get(sq);
         if (p && p.type === 'k' && p.color === turn) return sq;
       }
-    }
     return null;
   }
 
   clickSquare(square: Square) {
     if (this.chess.isGameOver()) return;
-
     if (this.selectedSquare) {
       if (this.legalMoves.includes(square)) {
         this.makeMove(this.selectedSquare, square);
       } else {
-        const piece = this.chess.get(square);
-        if (piece && piece.color === this.chess.turn()) {
-          this.selectSquare(square);
-        } else {
-          this.clearSelection();
-        }
+        const p = this.chess.get(square);
+        if (p && p.color === this.chess.turn()) { this.selectSquare(square); }
+        else { this.clearSelection(); }
       }
     } else {
-      const piece = this.chess.get(square);
-      if (piece && piece.color === this.chess.turn()) {
-        this.selectSquare(square);
-      }
+      const p = this.chess.get(square);
+      if (p && p.color === this.chess.turn()) this.selectSquare(square);
     }
   }
 
-  selectSquare(square: Square) {
-    this.selectedSquare = square;
-    this.legalMoves = this.chess.moves({ square, verbose: true }).map((m: any) => m.to as Square);
+  selectSquare(sq: Square) {
+    this.selectedSquare = sq;
+    this.legalMoves     = this.chess.moves({ square: sq, verbose: true }).map((m: any) => m.to as Square);
     this.renderBoard();
   }
 
   clearSelection() {
     this.selectedSquare = null;
-    this.legalMoves = [];
+    this.legalMoves     = [];
     this.renderBoard();
   }
 
   makeMove(from: Square, to: Square) {
-    const move = this.chess.move({ from, to, promotion: 'q' });
+    const prevFen = this.chess.fen();
+    const move    = this.chess.move({ from, to, promotion: 'q' });
     if (move) {
-      this.lastMove = { from, to };
+      this.lastMove    = { from, to };
       this.moveHistory = this.chess.history();
     }
     this.selectedSquare = null;
-    this.legalMoves = [];
+    this.legalMoves     = [];
     this.renderBoard();
     this.updateStatus();
+
+    // Clear stale AI results on new move
+    this.hintResult   = null;
+    this.explainResult = '';
+    this.aiError       = '';
   }
 
   updateStatus() {
     if (this.chess.isCheckmate()) {
-      const winner = this.chess.turn() === 'w' ? 'Black' : 'White';
-      this.gameStatus = `Checkmate! ${winner} wins`;
+      this.gameStatus = `Checkmate! ${this.chess.turn() === 'w' ? 'Black' : 'White'} wins`;
     } else if (this.chess.isDraw()) {
       this.gameStatus = 'Draw!';
     } else if (this.chess.inCheck()) {
@@ -137,33 +147,75 @@ export class PlayComponent implements OnInit {
 
   undoMove() {
     this.chess.undo();
-    this.lastMove = null;
+    this.lastMove    = null;
     this.moveHistory = this.chess.history();
+    this.hintResult  = null;
+    this.explainResult = '';
     this.clearSelection();
     this.updateStatus();
   }
 
   resetGame() {
     this.chess.reset();
-    this.lastMove = null;
+    this.lastMove    = null;
     this.moveHistory = [];
+    this.hintResult  = null;
+    this.explainResult = '';
+    this.aiError     = '';
     this.clearSelection();
     this.updateStatus();
   }
 
-  flipBoard() {
-    this.isFlipped = !this.isFlipped;
-    this.renderBoard();
-  }
+  flipBoard() { this.isFlipped = !this.isFlipped; this.renderBoard(); }
 
   playAs(color: 'w' | 'b') {
     this.playerColor = color;
-    this.isFlipped = color === 'b';
+    this.isFlipped   = color === 'b';
     this.renderBoard();
   }
 
+  // ---- AI Coach ----
+
+  getHint() {
+    if (this.hintLoading || this.chess.isGameOver()) return;
+    this.hintLoading  = true;
+    this.hintResult   = null;
+    this.explainResult = '';
+    this.aiError       = '';
+
+    this.aiCoach.getHint(this.chess.fen()).subscribe({
+      next: r  => { this.hintResult = r; this.hintLoading = false; },
+      error: e => {
+        this.aiError     = e?.error?.detail || 'Rate limit reached (10/hr)';
+        this.hintLoading = false;
+      }
+    });
+  }
+
+  explainLast() {
+    if (this.explainLoading || this.moveHistory.length === 0) return;
+    const move = this.moveHistory.at(-1) || '';
+    this.explainLoading  = true;
+    this.hintResult      = null;
+    this.explainResult   = '';
+    this.lastExplainMove = move;
+    this.aiError         = '';
+
+    this.aiCoach.explainMove(this.chess.fen(), move).subscribe({
+      next: r  => { this.explainResult = r.explanation; this.explainLoading = false; },
+      error: e => {
+        this.aiError        = e?.error?.detail || 'Rate limit reached (10/hr)';
+        this.explainLoading = false;
+      }
+    });
+  }
+
+  // ---- Display helpers ----
+
   get displayBoard(): Cell[][] {
-    return this.isFlipped ? [...this.board].reverse().map(row => [...row].reverse()) : this.board;
+    return this.isFlipped
+      ? [...this.board].reverse().map(row => [...row].reverse())
+      : this.board;
   }
 
   get displayFiles(): string[] {
@@ -180,11 +232,13 @@ export class PlayComponent implements OnInit {
     return this.PIECES[`${piece.color}${piece.type.toUpperCase()}`] || '';
   }
 
-  moveLabel(move: string, i: number): string {
-    return i % 2 === 0 ? `${Math.floor(i / 2) + 1}. ${move}` : move;
-  }
+  isGameOver(): boolean { return this.chess.isGameOver(); }
 
-  isGameOver(): boolean {
-    return this.chess.isGameOver();
+  get movePairs(): string[][] {
+    const pairs: string[][] = [];
+    for (let i = 0; i < this.moveHistory.length; i += 2) {
+      pairs.push([this.moveHistory[i], this.moveHistory[i+1] || '']);
+    }
+    return pairs;
   }
 }

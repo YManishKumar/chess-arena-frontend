@@ -1,81 +1,142 @@
-<div class="play-wrapper">
+<div class="play-shell">
 
+  <!-- Header -->
   <div class="play-header">
-    <h2 class="play-title">♟️ Chess Board</h2>
-    <span class="status-badge" [class.check]="gameStatus.includes('check')" [class.over]="isGameOver()">
+    <div>
+      <h1 class="play-title">Practice Board</h1>
+      <p class="play-sub">Solo · AI Coach · Unlimited</p>
+    </div>
+    <span class="status-badge"
+          [class.check]="gameStatus.includes('check')"
+          [class.over]="isGameOver()">
       {{ gameStatus }}
     </span>
   </div>
 
   <div class="play-layout">
 
-    <!-- Board -->
-    <div class="board-container">
-      <div class="rank-labels">
-        <span *ngFor="let r of displayRanks">{{ r }}</span>
-      </div>
-      <div class="board-col">
-        <div class="board">
-          <div class="board-row" *ngFor="let row of displayBoard">
-            <div
-              class="cell"
-              *ngFor="let cell of row"
-              [class.light]="cell.isLight"
-              [class.dark]="!cell.isLight"
-              [class.selected]="cell.isSelected"
-              [class.legal-move]="cell.isLegalMove && !cell.piece"
-              [class.legal-capture]="cell.isLegalMove && cell.piece"
-              [class.last-move]="cell.isLastMove"
-              [class.in-check]="cell.isCheck"
-              (click)="clickSquare(cell.square)">
-              <span class="piece" *ngIf="cell.piece">{{ pieceSymbol(cell.piece) }}</span>
-              <span class="legal-dot" *ngIf="cell.isLegalMove && !cell.piece"></span>
-            </div>
-          </div>
-        </div>
-        <div class="file-labels">
-          <span *ngFor="let f of displayFiles">{{ f }}</span>
-        </div>
-      </div>
-    </div>
+    <!-- Left sidebar -->
+    <div class="play-sidebar sidebar-left">
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-
-      <!-- Color picker -->
-      <div class="panel">
-        <h3 class="panel-title">Play as</h3>
-        <div class="color-btns">
-          <button class="color-btn" [class.active]="playerColor === 'w'" (click)="playAs('w')">⬜ White</button>
-          <button class="color-btn" [class.active]="playerColor === 'b'" (click)="playAs('b')">⬛ Black</button>
+      <!-- Play as -->
+      <div class="glass-card side-panel">
+        <div class="side-panel-label">Play As</div>
+        <div class="color-buttons">
+          <button class="color-btn white-btn" [class.active]="playerColor === 'w'" (click)="playAs('w')">♔ White</button>
+          <button class="color-btn black-btn" [class.active]="playerColor === 'b'" (click)="playAs('b')">♚ Black</button>
         </div>
       </div>
 
       <!-- Controls -->
-      <div class="panel">
-        <h3 class="panel-title">Controls</h3>
-        <div class="controls">
+      <div class="glass-card side-panel">
+        <div class="side-panel-label">Controls</div>
+        <div class="ctrl-list">
           <button class="ctrl-btn" (click)="undoMove()" [disabled]="moveHistory.length === 0">↩ Undo</button>
-          <button class="ctrl-btn" (click)="flipBoard()">🔄 Flip Board</button>
+          <button class="ctrl-btn" (click)="flipBoard()">⇅ Flip Board</button>
           <button class="ctrl-btn danger" (click)="resetGame()">↺ New Game</button>
         </div>
       </div>
 
       <!-- Move history -->
-      <div class="panel moves-panel">
-        <h3 class="panel-title">Move History</h3>
-        <div class="moves-grid" *ngIf="moveHistory.length > 0; else noMoves">
-          <ng-container *ngFor="let move of moveHistory; let i = index">
-            <span class="move-num" *ngIf="i % 2 === 0">{{ (i / 2) + 1 }}.</span>
-            <span class="move-text" [class.black-move]="i % 2 !== 0">{{ move }}</span>
-          </ng-container>
+      <div class="glass-card side-panel moves-panel">
+        <div class="side-panel-label">Move History</div>
+        <div class="moves-list">
+          <div class="move-pair" *ngFor="let pair of movePairs; let i = index">
+            <span class="move-n">{{ i+1 }}.</span>
+            <span class="move-s" [class.last-w]="i*2 === moveHistory.length-1">{{ pair[0] }}</span>
+            <span class="move-s black-m" [class.last-b]="i*2+1 === moveHistory.length-1">{{ pair[1] }}</span>
+          </div>
+          <p class="no-moves" *ngIf="moveHistory.length === 0">No moves yet</p>
         </div>
-        <ng-template #noMoves>
-          <p class="no-moves">No moves yet</p>
-        </ng-template>
       </div>
 
     </div>
+
+    <!-- Board -->
+    <div class="board-area">
+      <div class="board-outer">
+        <div class="rank-labels">
+          <span class="rank-label" *ngFor="let r of displayRanks">{{ r }}</span>
+        </div>
+        <div class="board-col">
+          <div class="board">
+            <div class="board-row" *ngFor="let row of displayBoard">
+              <div class="cell"
+                   *ngFor="let cell of row"
+                   [class.light]="cell.isLight"
+                   [class.dark]="!cell.isLight"
+                   [class.selected]="cell.isSelected"
+                   [class.legal-move]="cell.isLegalMove && !cell.piece"
+                   [class.legal-capture]="cell.isLegalMove && !!cell.piece"
+                   [class.last-move]="cell.isLastMove"
+                   [class.in-check]="cell.isCheck"
+                   (click)="clickSquare(cell.square)">
+                <span class="piece" *ngIf="cell.piece"
+                      [class.white-p]="cell.piece.color === 'w'">{{ pieceSymbol(cell.piece) }}</span>
+                <span class="legal-dot" *ngIf="cell.isLegalMove && !cell.piece"></span>
+              </div>
+            </div>
+          </div>
+          <div class="file-labels">
+            <span class="file-label" *ngFor="let f of displayFiles">{{ f }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Coach buttons -->
+      <div class="coach-buttons">
+        <button class="btn btn-gold" (click)="getHint()" [disabled]="hintLoading || isGameOver()">
+          <span *ngIf="!hintLoading">⚡ Get Hint</span>
+          <span class="spinner" *ngIf="hintLoading"></span>
+        </button>
+        <button class="btn btn-ghost" (click)="explainLast()" [disabled]="explainLoading || moveHistory.length === 0">
+          <span *ngIf="!explainLoading">◎ Explain Last Move</span>
+          <span class="spinner" *ngIf="explainLoading"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Right sidebar: AI Coach -->
+    <div class="play-sidebar sidebar-right">
+      <div class="glass-card coach-card">
+        <div class="coach-header-row">
+          <span class="coach-badge">⚡ AI Coach</span>
+          <span class="rate-hint">10 req/hr</span>
+        </div>
+
+        <div class="ai-error" *ngIf="aiError">⚠ {{ aiError }}</div>
+
+        <div class="hint-result" *ngIf="hintResult">
+          <div class="hint-top">
+            <span class="hint-lbl">Best Move</span>
+            <span class="hint-move-val">{{ hintResult.best_move }}</span>
+          </div>
+          <p class="hint-analysis">{{ hintResult.analysis }}</p>
+          <p class="hint-why">{{ hintResult.explanation }}</p>
+        </div>
+
+        <div class="explain-result" *ngIf="explainResult">
+          <div class="hint-top">
+            <span class="hint-lbl">Explaining</span>
+            <span class="hint-move-val" style="color:#6c63ff">{{ lastExplainMove }}</span>
+          </div>
+          <p class="hint-analysis">{{ explainResult }}</p>
+        </div>
+
+        <div class="coach-loading" *ngIf="hintLoading || explainLoading">
+          <div class="spinner"></div>
+          <span>Analysing…</span>
+        </div>
+
+        <div class="coach-idle" *ngIf="!hintResult && !explainResult && !hintLoading && !explainLoading && !aiError">
+          <div class="coach-idle-icon animate-float">🎓</div>
+          <p>Click <strong>Get Hint</strong> for the best move, or <strong>Explain</strong> after a move to understand it.</p>
+          <p class="rate-note">Responses are cached — same position = instant answer.</p>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 
 </div>
