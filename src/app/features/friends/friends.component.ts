@@ -7,6 +7,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { GameService } from '../../core/services/game.service';
 import { FriendChatService, ChatMessage } from '../../core/services/friend-chat.service';
 import { ApiService } from '../../core/services/api.service';
+import { SupabaseService } from '../../core/services/supabase.service';
 
 @Component({
   selector: 'app-friends',
@@ -57,6 +58,7 @@ export class FriendsComponent implements OnInit, OnDestroy, AfterViewChecked {
     private gameService: GameService,
     private chatService: FriendChatService,
     private api: ApiService,
+    private sb: SupabaseService,
     private router: Router
   ) {
     this.currentEmail = auth.getEmail();
@@ -83,16 +85,8 @@ export class FriendsComponent implements OnInit, OnDestroy, AfterViewChecked {
     if (el) el.scrollTop = el.scrollHeight;
   }
 
-  private resolveMyId() {
-    this.api.get<{ users: any[] }>(`/users?email=${encodeURIComponent(this.currentEmail)}`).subscribe({
-      next: () => {},
-      error: () => {}
-    });
-    // Resolve userId from profiles
-    this.api.get<any>(`/users/points?email=${encodeURIComponent(this.currentEmail)}`).subscribe({
-      next: () => {},
-      error: () => {}
-    });
+  private async resolveMyId() {
+    this.myId = await this.sb.getUserId();
   }
 
   setTab(t: 'friends' | 'browse') {
@@ -224,14 +218,11 @@ export class FriendsComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.chatService.unsubscribe();
 
     this.chatService.loadMessages(email).subscribe({
-      next: msgs => {
+      next: async msgs => {
         this.messages    = msgs;
         this.chatLoading = false;
         this.scrollPending = true;
-
-        // Subscribe to realtime updates — use placeholder IDs since we store UUIDs in DB
-        // We'll filter by email match in the service
-        this.chatService.subscribeToMessages(
+        await this.chatService.subscribeToMessages(
           this.currentEmail,
           email,
           (msg: ChatMessage) => {

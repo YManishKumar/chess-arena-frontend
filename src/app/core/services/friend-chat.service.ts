@@ -17,6 +17,7 @@ export interface ChatMessage {
 export class FriendChatService {
   private API = environment.apiUrl;
   private channel: RealtimeChannel | null = null;
+  private myUuid = '';
   readonly messages$ = new BehaviorSubject<ChatMessage[]>([]);
 
   constructor(private http: HttpClient, private sb: SupabaseService) {}
@@ -32,10 +33,15 @@ export class FriendChatService {
     });
   }
 
-  subscribeToMessages(myId: string, friendId: string, onMessage: (msg: ChatMessage) => void): void {
+  async subscribeToMessages(myEmail: string, friendEmail: string, onMessage: (msg: ChatMessage) => void): Promise<void> {
     if (this.channel) {
       this.sb.removeChannel(this.channel);
     }
+    const [myId, friendId] = await Promise.all([
+      this.sb.getUserId(),
+      this.sb.getProfileId(friendEmail)
+    ]);
+    this.myUuid = myId;
     this.channel = this.sb.client
       .channel(`chat-${[myId, friendId].sort().join('-')}`)
       .on('postgres_changes', {
@@ -51,6 +57,8 @@ export class FriendChatService {
       })
       .subscribe();
   }
+
+  getMyUuid(): string { return this.myUuid; }
 
   unsubscribe() {
     if (this.channel) {

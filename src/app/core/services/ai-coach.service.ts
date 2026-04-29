@@ -15,11 +15,11 @@ export class AiCoachService {
 
   constructor(private http: HttpClient) {}
 
-  getHint(fen: string): Observable<HintResponse> {
-    return this.http.post<HintResponse>(`${this.API}/ai/hint`, { fen });
+  getHint(fen: string, lang = 'english'): Observable<HintResponse> {
+    return this.http.post<HintResponse>(`${this.API}/ai/hint`, { fen, lang });
   }
 
-  explainMove(fen: string, move: string): Observable<{ explanation: string }> {
-    return this.http.post<{ explanation: string }>(`${this.API}/ai/explain`, { fen, move });
+  explainMove(fen: string, move: string, lang = 'english'): Observable<{ explanation: string }> {
+    return this.http.post<{ explanation: string }>(`${this.API}/ai/explain`, { fen, move, lang });
   }
 }

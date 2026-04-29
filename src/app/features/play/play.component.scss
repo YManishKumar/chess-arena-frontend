@@ -386,6 +386,74 @@ $cell-mobile: 42px;
   .rate-note { font-size: 10px; color: rgba(255,255,255,0.2); }
 }
 
+/* ---- AI toggle button ---- */
+.btn-ai-toggle {
+  padding: 7px 14px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: rgba(108,99,255,0.12);
+  border: 1px solid rgba(108,99,255,0.3);
+  color: rgba(255,255,255,0.55);
+
+  &:hover { background: rgba(108,99,255,0.22); color: #fff; }
+
+  &.active {
+    background: rgba(108,99,255,0.25);
+    border-color: #6c63ff;
+    color: #a8a2ff;
+    box-shadow: 0 0 12px rgba(108,99,255,0.3);
+  }
+}
+
+/* ---- AI thinking banner ---- */
+.ai-thinking-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(108,99,255,0.12);
+  border: 1px solid rgba(108,99,255,0.25);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: #a8a2ff;
+  font-weight: 600;
+  margin-bottom: 8px;
+  animation: pulse-ai 1.2s ease infinite;
+}
+
+@keyframes pulse-ai {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0.6; }
+}
+
+.spinner-sm {
+  width: 14px; height: 14px;
+  border: 2px solid rgba(168,162,255,0.3);
+  border-top-color: #a8a2ff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* ---- AI last move result ---- */
+.ai-move-result {
+  background: rgba(240,192,64,0.06);
+  border: 1px solid rgba(240,192,64,0.15);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+/* ---- Language ctrl-btn active ---- */
+.ctrl-btn.active {
+  background: rgba(108,99,255,0.2);
+  border-color: rgba(108,99,255,0.4);
+  color: #a8a2ff;
+}
+
 /* ---- Mobile ---- */
 @media (max-width: $cell * 8 + 100px) {
   .rank-label { width: 14px; height: $cell-mobile; }

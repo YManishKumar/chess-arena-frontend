@@ -98,6 +98,9 @@
     <!-- Board controls -->
     <div class="board-controls">
       <button class="btn btn-ghost btn-sm" (click)="flipBoard()" title="Flip board">⇅ Flip</button>
+      <select class="lang-select" [value]="selectedLang" (change)="selectedLang = $any($event.target).value" title="AI response language">
+        <option *ngFor="let l of langs" [value]="l.value">{{ l.label }}</option>
+      </select>
       <button class="btn btn-gold btn-sm" (click)="getHint()" [disabled]="hintLoading || isGameOver">
         <span *ngIf="!hintLoading">⚡ Hint</span>
         <span class="spinner" *ngIf="hintLoading"></span>

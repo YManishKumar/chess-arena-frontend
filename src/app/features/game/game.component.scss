@@ -328,6 +328,19 @@ $cell-mobile: 44px;
 
 .resign-btn { margin-left: auto; }
 
+.lang-select {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  color: #e0e0e0;
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  cursor: pointer;
+  outline: none;
+  &:focus { border-color: #f0c040; }
+  option { background: #1a1a28; color: #e0e0e0; }
+}
+
 /* ---- Resign confirm ---- */
 .resign-confirm {
   position: absolute;

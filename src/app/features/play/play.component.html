@@ -3,14 +3,19 @@
   <!-- Header -->
   <div class="play-header">
     <div>
-      <h1 class="play-title">Practice Board</h1>
-      <p class="play-sub">Solo · AI Coach · Unlimited</p>
+      <h1 class="play-title">{{ aiMode ? 'vs AI' : 'Practice Board' }}</h1>
+      <p class="play-sub">{{ aiMode ? 'You vs AI · ' : 'Solo · ' }}AI Coach · Unlimited</p>
     </div>
-    <span class="status-badge"
-          [class.check]="gameStatus.includes('check')"
-          [class.over]="isGameOver()">
-      {{ gameStatus }}
-    </span>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="status-badge"
+            [class.check]="gameStatus.includes('check')"
+            [class.over]="isGameOver()">
+        {{ gameStatus }}
+      </span>
+      <button class="btn-ai-toggle" [class.active]="aiMode" (click)="toggleAiMode()">
+        {{ aiMode ? '🤖 AI On' : '🤖 Play vs AI' }}
+      </button>
+    </div>
   </div>
 
   <div class="play-layout">
@@ -31,9 +36,21 @@
       <div class="glass-card side-panel">
         <div class="side-panel-label">Controls</div>
         <div class="ctrl-list">
-          <button class="ctrl-btn" (click)="undoMove()" [disabled]="moveHistory.length === 0">↩ Undo</button>
+          <button class="ctrl-btn" (click)="undoMove()" [disabled]="moveHistory.length === 0 || aiThinking">↩ Undo</button>
           <button class="ctrl-btn" (click)="flipBoard()">⇅ Flip Board</button>
-          <button class="ctrl-btn danger" (click)="resetGame()">↺ New Game</button>
+          <button class="ctrl-btn danger" (click)="resetGame()" [disabled]="aiThinking">↺ New Game</button>
+        </div>
+      </div>
+
+      <!-- Language selector -->
+      <div class="glass-card side-panel">
+        <div class="side-panel-label">AI Language</div>
+        <div class="ctrl-list">
+          <button class="ctrl-btn" *ngFor="let l of langs"
+                  [class.active]="selectedLang === l.value"
+                  (click)="selectedLang = l.value">
+            {{ l.label }}
+          </button>
         </div>
       </div>
 
@@ -83,13 +100,19 @@
         </div>
       </div>
 
+      <!-- AI thinking banner -->
+      <div class="ai-thinking-banner" *ngIf="aiThinking">
+        <span class="spinner spinner-sm"></span>
+        AI is thinking…
+      </div>
+
       <!-- AI Coach buttons -->
       <div class="coach-buttons">
-        <button class="btn btn-gold" (click)="getHint()" [disabled]="hintLoading || isGameOver()">
+        <button class="btn btn-gold" (click)="getHint()" [disabled]="hintLoading || aiThinking || isGameOver()">
           <span *ngIf="!hintLoading">⚡ Get Hint</span>
           <span class="spinner" *ngIf="hintLoading"></span>
         </button>
-        <button class="btn btn-ghost" (click)="explainLast()" [disabled]="explainLoading || moveHistory.length === 0">
+        <button class="btn btn-ghost" (click)="explainLast()" [disabled]="explainLoading || aiThinking || moveHistory.length === 0">
           <span *ngIf="!explainLoading">◎ Explain Last Move</span>
           <span class="spinner" *ngIf="explainLoading"></span>
         </button>
@@ -128,9 +151,18 @@
           <span>Analysing…</span>
         </div>
 
-        <div class="coach-idle" *ngIf="!hintResult && !explainResult && !hintLoading && !explainLoading && !aiError">
-          <div class="coach-idle-icon animate-float">🎓</div>
-          <p>Click <strong>Get Hint</strong> for the best move, or <strong>Explain</strong> after a move to understand it.</p>
+        <!-- AI opponent last move -->
+        <div class="ai-move-result" *ngIf="aiMode && aiLastMove && !aiThinking">
+          <div class="hint-top">
+            <span class="hint-lbl">AI played</span>
+            <span class="hint-move-val" style="color:#f0c040">{{ aiLastMove }}</span>
+          </div>
+        </div>
+
+        <div class="coach-idle" *ngIf="!hintResult && !explainResult && !hintLoading && !explainLoading && !aiError && !(aiMode && aiLastMove)">
+          <div class="coach-idle-icon animate-float">{{ aiMode ? '🤖' : '🎓' }}</div>
+          <p *ngIf="!aiMode">Click <strong>Get Hint</strong> for the best move, or <strong>Explain</strong> after a move to understand it.</p>
+          <p *ngIf="aiMode">You are playing against AI. Make your move — the AI will respond automatically.</p>
           <p class="rate-note">Responses are cached — same position = instant answer.</p>
         </div>
 

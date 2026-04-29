@@ -63,6 +63,12 @@ export class GameComponent implements OnInit, OnDestroy {
   coachOpen      = false;
   lastExplainedMove = '';
   aiError        = '';
+  selectedLang   = 'english';
+  readonly langs = [
+    { value: 'english', label: 'English' },
+    { value: 'hindi',   label: 'हिंदी' },
+    { value: 'odia',    label: 'ଓଡ଼ିଆ' },
+  ];
 
   constructor(
     private route: ActivatedRoute,
@@ -286,7 +292,7 @@ export class GameComponent implements OnInit, OnDestroy {
     this.hintResult   = null;
     this.aiError      = '';
     this.coachOpen    = true;
-    this.aiCoach.getHint(this.game.fen).subscribe({
+    this.aiCoach.getHint(this.game.fen, this.selectedLang).subscribe({
       next: r  => { this.hintResult = r; this.hintLoading = false; },
       error: e => {
         this.aiError     = e?.error?.detail || 'Rate limit reached';
@@ -307,7 +313,7 @@ export class GameComponent implements OnInit, OnDestroy {
     this.coachOpen        = true;
     this.aiError          = '';
 
-    this.aiCoach.explainMove(fenStr, moveSan).subscribe({
+    this.aiCoach.explainMove(fenStr, moveSan, this.selectedLang).subscribe({
       next: r  => { this.explainResult = r.explanation; this.explainLoading = false; },
       error: e => {
         this.aiError        = e?.error?.detail || 'Rate limit reached';

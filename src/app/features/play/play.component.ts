@@ -33,6 +33,11 @@ export class PlayComponent implements OnInit {
   playerColor: 'w' | 'b' = 'w';
   gameStatus   = '';
 
+  // AI Opponent
+  aiMode      = false;
+  aiThinking  = false;
+  aiLastMove  = '';
+
   // AI Coach
   hintLoading    = false;
   explainLoading = false;
@@ -40,6 +45,13 @@ export class PlayComponent implements OnInit {
   explainResult  = '';
   lastExplainMove = '';
   aiError         = '';
+
+  selectedLang = 'english';
+  readonly langs = [
+    { value: 'english', label: 'English' },
+    { value: 'hindi',   label: 'हिंदी' },
+    { value: 'odia',    label: 'ଓଡ଼ିଆ' },
+  ];
 
   readonly PIECES: Record<string, string> = {
     'wK':'♔','wQ':'♕','wR':'♖','wB':'♗','wN':'♘','wP':'♙',
@@ -89,6 +101,8 @@ export class PlayComponent implements OnInit {
 
   clickSquare(square: Square) {
     if (this.chess.isGameOver()) return;
+    if (this.aiThinking) return;
+    if (this.aiMode && this.chess.turn() !== this.playerColor) return;
     if (this.selectedSquare) {
       if (this.legalMoves.includes(square)) {
         this.makeMove(this.selectedSquare, square);
@@ -116,21 +130,68 @@ export class PlayComponent implements OnInit {
   }
 
   makeMove(from: Square, to: Square) {
-    const prevFen = this.chess.fen();
-    const move    = this.chess.move({ from, to, promotion: 'q' });
-    if (move) {
-      this.lastMove    = { from, to };
-      this.moveHistory = this.chess.history();
-    }
+    const move = this.chess.move({ from, to, promotion: 'q' });
+    if (!move) return;
+    this.lastMove       = { from, to };
+    this.moveHistory    = this.chess.history();
     this.selectedSquare = null;
     this.legalMoves     = [];
+    this.hintResult     = null;
+    this.explainResult  = '';
+    this.aiError        = '';
     this.renderBoard();
     this.updateStatus();
 
-    // Clear stale AI results on new move
-    this.hintResult   = null;
-    this.explainResult = '';
-    this.aiError       = '';
+    if (this.aiMode && !this.chess.isGameOver()) {
+      this.triggerAiMove();
+    }
+  }
+
+  triggerAiMove() {
+    this.aiThinking = true;
+    this.aiLastMove = '';
+    this.aiCoach.getHint(this.chess.fen(), this.selectedLang).subscribe({
+      next: r => {
+        this.applyAiMove(r.best_move);
+      },
+      error: () => {
+        this.applyRandomMove();
+      }
+    });
+  }
+
+  private applyAiMove(san: string) {
+    try {
+      const m = this.chess.move(san);
+      if (m) {
+        this.lastMove    = { from: m.from as Square, to: m.to as Square };
+        this.aiLastMove  = m.san;
+        this.moveHistory = this.chess.history();
+      } else {
+        this.applyRandomMove();
+        return;
+      }
+    } catch {
+      this.applyRandomMove();
+      return;
+    }
+    this.aiThinking = false;
+    this.renderBoard();
+    this.updateStatus();
+  }
+
+  private applyRandomMove() {
+    const moves = this.chess.moves({ verbose: true }) as any[];
+    if (moves.length > 0) {
+      const m = moves[Math.floor(Math.random() * moves.length)];
+      this.chess.move(m);
+      this.lastMove    = { from: m.from as Square, to: m.to as Square };
+      this.aiLastMove  = m.san;
+      this.moveHistory = this.chess.history();
+    }
+    this.aiThinking = false;
+    this.renderBoard();
+    this.updateStatus();
   }
 
   updateStatus() {
@@ -146,10 +207,16 @@ export class PlayComponent implements OnInit {
   }
 
   undoMove() {
-    this.chess.undo();
-    this.lastMove    = null;
-    this.moveHistory = this.chess.history();
-    this.hintResult  = null;
+    if (this.aiMode) {
+      this.chess.undo();
+      this.chess.undo();
+    } else {
+      this.chess.undo();
+    }
+    this.lastMove      = null;
+    this.aiLastMove    = '';
+    this.moveHistory   = this.chess.history();
+    this.hintResult    = null;
     this.explainResult = '';
     this.clearSelection();
     this.updateStatus();
@@ -157,13 +224,23 @@ export class PlayComponent implements OnInit {
 
   resetGame() {
     this.chess.reset();
-    this.lastMove    = null;
-    this.moveHistory = [];
-    this.hintResult  = null;
+    this.lastMove      = null;
+    this.aiLastMove    = '';
+    this.aiThinking    = false;
+    this.moveHistory   = [];
+    this.hintResult    = null;
     this.explainResult = '';
-    this.aiError     = '';
+    this.aiError       = '';
     this.clearSelection();
     this.updateStatus();
+    if (this.aiMode && this.playerColor === 'b') {
+      this.triggerAiMove();
+    }
+  }
+
+  toggleAiMode() {
+    this.aiMode = !this.aiMode;
+    this.resetGame();
   }
 
   flipBoard() { this.isFlipped = !this.isFlipped; this.renderBoard(); }
@@ -171,19 +248,19 @@ export class PlayComponent implements OnInit {
   playAs(color: 'w' | 'b') {
     this.playerColor = color;
     this.isFlipped   = color === 'b';
-    this.renderBoard();
+    this.resetGame();
   }
 
   // ---- AI Coach ----
 
   getHint() {
-    if (this.hintLoading || this.chess.isGameOver()) return;
+    if (this.hintLoading || this.aiThinking || this.chess.isGameOver()) return;
     this.hintLoading  = true;
     this.hintResult   = null;
     this.explainResult = '';
     this.aiError       = '';
 
-    this.aiCoach.getHint(this.chess.fen()).subscribe({
+    this.aiCoach.getHint(this.chess.fen(), this.selectedLang).subscribe({
       next: r  => { this.hintResult = r; this.hintLoading = false; },
       error: e => {
         this.aiError     = e?.error?.detail || 'Rate limit reached (10/hr)';
@@ -193,7 +270,7 @@ export class PlayComponent implements OnInit {
   }
 
   explainLast() {
-    if (this.explainLoading || this.moveHistory.length === 0) return;
+    if (this.explainLoading || this.aiThinking || this.moveHistory.length === 0) return;
     const move = this.moveHistory.at(-1) || '';
     this.explainLoading  = true;
     this.hintResult      = null;
@@ -201,7 +278,7 @@ export class PlayComponent implements OnInit {
     this.lastExplainMove = move;
     this.aiError         = '';
 
-    this.aiCoach.explainMove(this.chess.fen(), move).subscribe({
+    this.aiCoach.explainMove(this.chess.fen(), move, this.selectedLang).subscribe({
       next: r  => { this.explainResult = r.explanation; this.explainLoading = false; },
       error: e => {
         this.aiError        = e?.error?.detail || 'Rate limit reached (10/hr)';
