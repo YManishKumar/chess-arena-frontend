@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Chess, Square, Piece } from 'chess.js';
 import { AiCoachService, HintResponse } from '../../core/services/ai-coach.service';
 import { AuthService } from '../../core/services/auth.service';
+import { ChessBoard3DComponent } from '../game/board-3d/chess-board-3d.component';
 
 interface Cell {
   square: Square;
@@ -17,7 +18,7 @@ interface Cell {
 @Component({
   selector: 'app-play',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ChessBoard3DComponent],
   templateUrl: './play.component.html',
   styleUrls: ['./play.component.scss']
 })
@@ -32,6 +33,13 @@ export class PlayComponent implements OnInit {
   isFlipped    = false;
   playerColor: 'w' | 'b' = 'w';
   gameStatus   = '';
+  viewMode: '2d' | '3d' = '2d';
+
+  toggleViewMode() { this.viewMode = this.viewMode === '2d' ? '3d' : '2d'; }
+
+  get checkSq(): Square | null { return this.getCheckSquare(); }
+
+  get currentFen(): string { return this.chess.fen(); }
 
   // AI Opponent
   aiMode      = false;

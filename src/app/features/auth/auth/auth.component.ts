@@ -57,13 +57,9 @@ export class AuthComponent {
     }
     this.loading = true;
     this.auth.signup(this.signupName, this.signupEmail, this.signupPassword, this.signupPhone).subscribe({
-      next: (res) => {
+      next: () => {
         this.loading = false;
-        if (res?.token) {
-          this.router.navigate(['/dashboard']);
-        } else {
-          this.success = 'Account created! Check your email to confirm, then log in.';
-        }
+        this.router.navigate(['/dashboard']);
       },
       error: (e: any) => {
         this.error = e?.error?.detail || 'Signup failed';

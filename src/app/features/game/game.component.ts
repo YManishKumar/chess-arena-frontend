@@ -7,6 +7,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { GameService, Game } from '../../core/services/game.service';
 import { AiCoachService, HintResponse } from '../../core/services/ai-coach.service';
 import { ApiService } from '../../core/services/api.service';
+import { ChessBoard3DComponent } from './board-3d/chess-board-3d.component';
 
 interface Cell {
   square: Square;
@@ -21,7 +22,7 @@ interface Cell {
 @Component({
   selector: 'app-game',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ChessBoard3DComponent],
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss']
 })
@@ -54,6 +55,25 @@ export class GameComponent implements OnInit, OnDestroy {
   movePending  = false;
   lastMoveFlash = false;
   resignConfirm = false;
+  viewMode: '2d' | '3d' = '2d';
+
+  // Game-over overlay
+  showGameOverModal = false;
+  leaderboard: { name: string; email: string; points: number }[] = [];
+  leaderboardLoading = false;
+  myPoints: number | null = null;
+
+  toggleViewMode() { this.viewMode = this.viewMode === '2d' ? '3d' : '2d'; }
+
+  clickSquare3D(sq: Square) {
+    const flat = this.board.flat();
+    const cell = flat.find(c => c.square === sq);
+    if (cell) { this.clickSquare(cell); return; }
+    const piece = this.chess.get(sq);
+    this.clickSquare({ square: sq, piece: piece || null, isLight: false, isSelected: false, isLegalMove: false, isLastMove: false, isCheck: false });
+  }
+
+  get checkSq(): Square | null { return this.getCheckSquare(); }
 
   // AI Coach
   hintLoading    = false;
@@ -139,14 +159,62 @@ export class GameComponent implements OnInit, OnDestroy {
   private updateStatus() {
     if (!this.game) return;
     const s = this.game.status;
-    if (s === 'checkmate')  { this.gameStatus = `Checkmate — ${this.chess.turn() === 'w' ? 'Black' : 'White'} wins!`; return; }
-    if (s === 'draw')       { this.gameStatus = 'Game drawn'; return; }
-    if (s === 'resigned')   { this.gameStatus = 'Game resigned'; return; }
-    if (this.chess.inCheck()) {
+    if (s === 'checkmate')  { this.gameStatus = `Checkmate — ${this.chess.turn() === 'w' ? 'Black' : 'White'} wins!`; }
+    else if (s === 'draw')  { this.gameStatus = 'Game drawn'; }
+    else if (s === 'resigned') { this.gameStatus = 'Game resigned'; }
+    else if (this.chess.inCheck()) {
       this.gameStatus = `${this.chess.turn() === 'w' ? 'White' : 'Black'} is in check!`;
     } else {
       this.gameStatus = `${this.chess.turn() === 'w' ? 'White' : 'Black'} to move`;
     }
+    if (s !== 'active' && !this.showGameOverModal) {
+      this.showGameOverModal = true;
+      this.loadGameOverData();
+    }
+  }
+
+  private loadGameOverData() {
+    this.leaderboardLoading = true;
+    this.api.get<{ leaderboard: any[] }>('/users/leaderboard').subscribe({
+      next: res => { this.leaderboard = res.leaderboard; this.leaderboardLoading = false; },
+      error: () => { this.leaderboardLoading = false; }
+    });
+    this.api.get<{ points: number }>(`/users/points?email=${encodeURIComponent(this.myEmail)}`).subscribe({
+      next: r => { this.myPoints = r.points; },
+      error: () => {}
+    });
+  }
+
+  closeGameOverModal() { this.showGameOverModal = false; }
+
+  exitGame() { this.router.navigate(['/friends']); }
+
+  restartGame() {
+    this.showGameOverModal = false;
+    this.router.navigate(['/friends']);
+  }
+
+  get gameResultIcon(): string {
+    if (!this.game) return '♟';
+    if (this.game.status === 'draw') return '🤝';
+    if (this.game.status === 'checkmate') return '♔';
+    if (this.game.status === 'resigned') return '⚑';
+    return '♟';
+  }
+
+  get pointsChange(): string {
+    if (!this.game) return '';
+    if (this.game.status === 'draw') return 'No points change';
+    if (this.game.status === 'checkmate') return '+20 pts to winner · −10 pts to loser';
+    if (this.game.status === 'resigned') return '−10 pts to resigner';
+    return '';
+  }
+
+  initials(s: string): string {
+    if (!s) return '?';
+    const n = s.includes('@') ? s.split('@')[0] : s;
+    const p = n.split(/[\s._-]+/).filter(Boolean);
+    return p.length >= 2 ? (p[0][0] + p[1][0]).toUpperCase() : n.slice(0, 2).toUpperCase();
   }
 
   // ---- Board rendering ----

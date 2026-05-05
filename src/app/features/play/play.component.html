@@ -1,4 +1,79 @@
-<div class="play-shell">
+<!-- 3D Full-Screen Mode -->
+<div class="game-3d-fullscreen" *ngIf="viewMode === '3d'">
+  <app-chess-board-3d
+    [fen]="currentFen"
+    [selectedSquare]="selectedSquare"
+    [legalMoves]="legalMoves"
+    [lastMove]="lastMove"
+    [isFlipped]="isFlipped"
+    [checkSquare]="checkSq"
+    (squareClick)="clickSquare($event)">
+  </app-chess-board-3d>
+
+  <!-- HUD Top -->
+  <div class="hud-top">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="hud-title">{{ aiMode ? 'vs AI' : 'Practice' }}</span>
+      <span class="hud-status" [class.check]="gameStatus.includes('check')">{{ gameStatus }}</span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="hud-btn" [class.active]="aiMode" (click)="toggleAiMode()">
+        {{ aiMode ? '🤖 AI On' : '🤖 vs AI' }}
+      </button>
+      <button class="hud-btn" (click)="toggleViewMode()">2D</button>
+    </div>
+  </div>
+
+  <!-- HUD Bottom -->
+  <div class="hud-bottom">
+    <button class="hud-btn" (click)="playAs('w')" [class.active]="playerColor==='w'">♔ White</button>
+    <button class="hud-btn" (click)="playAs('b')" [class.active]="playerColor==='b'">♚ Black</button>
+    <button class="hud-btn" (click)="undoMove()" [disabled]="moveHistory.length===0||aiThinking">↩ Undo</button>
+    <button class="hud-btn" (click)="flipBoard()">⇅ Flip</button>
+    <button class="hud-btn" (click)="resetGame()" [disabled]="aiThinking">↺ New</button>
+    <button class="hud-btn gold" (click)="getHint()" [disabled]="hintLoading||aiThinking||isGameOver()">
+      <span *ngIf="!hintLoading">⚡ Hint</span>
+      <span class="spinner" *ngIf="hintLoading"></span>
+    </button>
+    <button class="hud-btn" (click)="explainLast()" [disabled]="explainLoading||moveHistory.length===0">
+      <span *ngIf="!explainLoading">◎ Explain</span>
+      <span class="spinner" *ngIf="explainLoading"></span>
+    </button>
+    <div class="lang-pills">
+      <button class="hud-btn" *ngFor="let l of langs" [class.active]="selectedLang===l.value"
+              (click)="selectedLang=l.value">{{ l.label }}</button>
+    </div>
+  </div>
+
+  <!-- HUD Coach -->
+  <div class="hud-coach" *ngIf="hintResult||explainResult||hintLoading||explainLoading||aiError||(aiMode&&aiLastMove&&!aiThinking)">
+    <div class="ai-error" *ngIf="aiError">⚠ {{ aiError }}</div>
+    <div *ngIf="hintResult">
+      <span class="coach-lbl">Best Move</span>
+      <span class="coach-val">{{ hintResult.best_move }}</span>
+      <p class="coach-text">{{ hintResult.analysis }}</p>
+    </div>
+    <div *ngIf="explainResult">
+      <span class="coach-lbl">Explaining</span>
+      <span class="coach-val purple">{{ lastExplainMove }}</span>
+      <p class="coach-text">{{ explainResult }}</p>
+    </div>
+    <div *ngIf="aiMode&&aiLastMove&&!aiThinking&&!hintResult&&!explainResult">
+      <span class="coach-lbl">AI played</span>
+      <span class="coach-val ai">{{ aiLastMove }}</span>
+    </div>
+    <div class="coach-spin" *ngIf="hintLoading||explainLoading">
+      <div class="spinner"></div><span>Analysing…</span>
+    </div>
+  </div>
+
+  <!-- AI thinking banner -->
+  <div class="hud-thinking" *ngIf="aiThinking">
+    <span class="spinner spinner-sm"></span> AI is thinking…
+  </div>
+</div>
+
+<div class="play-shell" *ngIf="viewMode === '2d'">
 
   <!-- Header -->
   <div class="play-header">
@@ -36,6 +111,7 @@
       <div class="glass-card side-panel">
         <div class="side-panel-label">Controls</div>
         <div class="ctrl-list">
+          <button class="ctrl-btn" (click)="toggleViewMode()">3D View</button>
           <button class="ctrl-btn" (click)="undoMove()" [disabled]="moveHistory.length === 0 || aiThinking">↩ Undo</button>
           <button class="ctrl-btn" (click)="flipBoard()">⇅ Flip Board</button>
           <button class="ctrl-btn danger" (click)="resetGame()" [disabled]="aiThinking">↺ New Game</button>
@@ -71,7 +147,8 @@
 
     <!-- Board -->
     <div class="board-area">
-      <div class="board-outer">
+      <!-- 2D Board -->
+      <div class="board-outer" *ngIf="viewMode === '2d'">
         <div class="rank-labels">
           <span class="rank-label" *ngFor="let r of displayRanks">{{ r }}</span>
         </div>

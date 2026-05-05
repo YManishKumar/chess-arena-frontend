@@ -226,6 +226,8 @@ export class FriendsComponent implements OnInit, OnDestroy, AfterViewChecked {
           this.currentEmail,
           email,
           (msg: ChatMessage) => {
+            // Skip if already added (e.g. sender sees their own message from HTTP response)
+            if (this.messages.some(m => m.id === msg.id)) return;
             this.messages.push(msg);
             this.scrollPending = true;
           }

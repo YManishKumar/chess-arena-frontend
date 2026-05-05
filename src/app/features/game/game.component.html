@@ -1,10 +1,87 @@
+<!-- 3D Full-Screen Mode -->
+<div class="game-3d-fullscreen" *ngIf="!loading && game && viewMode === '3d'">
+  <app-chess-board-3d
+    [fen]="game.fen"
+    [selectedSquare]="selectedSquare"
+    [legalMoves]="legalMoves"
+    [lastMove]="lastMove"
+    [isFlipped]="isFlipped"
+    [checkSquare]="checkSq"
+    (squareClick)="clickSquare3D($event)">
+  </app-chess-board-3d>
+
+  <!-- HUD Top Bar -->
+  <div class="hud-top">
+    <div class="hud-players">
+      <div class="hud-chip">
+        <div class="hud-avatar">W</div>
+        <span>White</span>
+        <div class="hud-dot" *ngIf="game.turn === 'white'"></div>
+      </div>
+      <div class="hud-vs">VS</div>
+      <div class="hud-chip">
+        <div class="hud-dot" *ngIf="game.turn === 'black'"></div>
+        <span>Black</span>
+        <div class="hud-avatar dark">B</div>
+      </div>
+    </div>
+    <div class="hud-status" [class.check]="gameStatus.includes('check')" [class.over]="isGameOver">
+      {{ gameStatus }}
+    </div>
+    <button class="hud-btn" (click)="toggleViewMode()">2D</button>
+  </div>
+
+  <!-- HUD Bottom Bar -->
+  <div class="hud-bottom">
+    <button class="hud-btn" (click)="flipBoard()">⇅ Flip</button>
+    <select class="hud-select" [value]="selectedLang" (change)="selectedLang = $any($event.target).value">
+      <option *ngFor="let l of langs" [value]="l.value">{{ l.label }}</option>
+    </select>
+    <button class="hud-btn gold" (click)="getHint()" [disabled]="hintLoading || isGameOver">
+      <span *ngIf="!hintLoading">⚡ Hint</span>
+      <span class="spinner" *ngIf="hintLoading"></span>
+    </button>
+    <button class="hud-btn" (click)="explainLastMove()" [disabled]="explainLoading || moveHistory.length === 0">
+      <span *ngIf="!explainLoading">◎ Explain</span>
+      <span class="spinner" *ngIf="explainLoading"></span>
+    </button>
+    <button class="hud-btn danger" (click)="tryResign()" *ngIf="!isGameOver">⚑ Resign</button>
+    <a routerLink="/friends" class="hud-btn" *ngIf="isGameOver">← Back</a>
+  </div>
+
+  <!-- HUD Coach Panel -->
+  <div class="hud-coach" *ngIf="hintResult || explainResult || hintLoading || explainLoading || aiError">
+    <div class="ai-error" *ngIf="aiError">⚠ {{ aiError }}</div>
+    <div *ngIf="hintResult">
+      <span class="coach-lbl">Best Move</span>
+      <span class="coach-val">{{ hintResult.best_move }}</span>
+      <p class="coach-text">{{ hintResult.analysis }}</p>
+    </div>
+    <div *ngIf="explainResult">
+      <span class="coach-lbl">Explaining</span>
+      <span class="coach-val purple">{{ lastExplainedMove }}</span>
+      <p class="coach-text">{{ explainResult }}</p>
+    </div>
+    <div class="coach-spin" *ngIf="hintLoading || explainLoading">
+      <div class="spinner"></div><span>Analysing…</span>
+    </div>
+  </div>
+
+  <!-- Resign confirm -->
+  <div class="hud-confirm" *ngIf="resignConfirm">
+    <p>Resign this game? You'll lose 10 points.</p>
+    <button class="hud-btn danger" (click)="confirmResign()">Yes, resign</button>
+    <button class="hud-btn" (click)="cancelResign()">Cancel</button>
+  </div>
+</div>
+
 <!-- Loading -->
 <div class="game-loading" *ngIf="loading">
   <div class="spinner" style="width:40px;height:40px;border-width:3px;"></div>
   <p>Loading game…</p>
 </div>
 
-<div class="game-shell" *ngIf="!loading && game">
+<div class="game-shell" *ngIf="!loading && game && viewMode === '2d'">
 
   <!-- ---- Left sidebar ---- -->
   <div class="sidebar sidebar-left">
@@ -59,15 +136,11 @@
       Move played
     </div>
 
-    <!-- Board wrapper -->
-    <div class="board-outer" [class.flipped]="isFlipped">
-
-      <!-- Rank labels -->
+    <!-- 2D Board -->
+    <div class="board-outer" *ngIf="viewMode === '2d'" [class.flipped]="isFlipped">
       <div class="rank-labels">
         <div class="rank-label" *ngFor="let r of displayRanks">{{ r }}</div>
       </div>
-
-      <!-- Squares -->
       <div class="board-grid">
         <div *ngFor="let row of displayBoard">
           <div *ngFor="let cell of row"
@@ -88,8 +161,6 @@
           </div>
         </div>
       </div>
-
-      <!-- File labels -->
       <div class="file-labels">
         <div class="file-label" *ngFor="let f of displayFiles">{{ f }}</div>
       </div>
@@ -97,6 +168,7 @@
 
     <!-- Board controls -->
     <div class="board-controls">
+      <button class="btn btn-ghost btn-sm" (click)="toggleViewMode()" title="Switch to 3D view">3D</button>
       <button class="btn btn-ghost btn-sm" (click)="flipBoard()" title="Flip board">⇅ Flip</button>
       <select class="lang-select" [value]="selectedLang" (change)="selectedLang = $any($event.target).value" title="AI response language">
         <option *ngFor="let l of langs" [value]="l.value">{{ l.label }}</option>
@@ -195,4 +267,57 @@
 
   </div>
 
+</div>
+
+<!-- ═══════════════════════════════ GAME OVER MODAL ═══════════════════════════════ -->
+<div class="go-backdrop" *ngIf="showGameOverModal" (click)="closeGameOverModal()">
+  <div class="go-modal" (click)="$event.stopPropagation()">
+
+    <!-- Result banner -->
+    <div class="go-result-banner" [class.win]="game?.status==='checkmate'" [class.draw]="game?.status==='draw'" [class.resign]="game?.status==='resigned'">
+      <div class="go-icon">{{ gameResultIcon }}</div>
+      <div class="go-title">{{ gameStatus }}</div>
+      <div class="go-points-note">{{ pointsChange }}</div>
+      <div class="go-my-points" *ngIf="myPoints !== null">
+        Your total: <strong>{{ myPoints }} pts</strong>
+      </div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div class="go-lb-section">
+      <div class="go-lb-header">
+        <span class="go-lb-title">🏆 Leaderboard</span>
+        <span class="go-lb-sub">Top 10 players</span>
+      </div>
+
+      <div class="go-lb-loading" *ngIf="leaderboardLoading">
+        <div class="spinner"></div><span>Loading…</span>
+      </div>
+
+      <div class="go-lb-list" *ngIf="!leaderboardLoading">
+        <div class="go-lb-row" *ngFor="let p of leaderboard; let i = index"
+             [class.go-lb-me]="p.email === myEmail"
+             [class.go-lb-top3]="i < 3">
+          <span class="go-lb-rank">
+            <span *ngIf="i===0">🥇</span>
+            <span *ngIf="i===1">🥈</span>
+            <span *ngIf="i===2">🥉</span>
+            <span *ngIf="i>=3">{{ i+1 }}</span>
+          </span>
+          <div class="go-lb-avatar">{{ initials(p.name || p.email) }}</div>
+          <span class="go-lb-name">{{ p.name || p.email.split('@')[0] }}</span>
+          <span class="go-lb-pts">{{ p.points }} pts</span>
+          <span class="go-lb-you" *ngIf="p.email === myEmail">You</span>
+        </div>
+        <div class="go-lb-empty" *ngIf="leaderboard.length === 0">No data yet</div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="go-actions">
+      <button class="go-btn go-btn-exit" (click)="exitGame()">← Exit to Friends</button>
+      <button class="go-btn go-btn-new" (click)="restartGame()">Challenge Again</button>
+    </div>
+
+  </div>
 </div>

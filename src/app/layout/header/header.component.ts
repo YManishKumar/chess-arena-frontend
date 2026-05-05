@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
 import { GameService, GameInvite } from '../../core/services/game.service';
 import { ApiService } from '../../core/services/api.service';
+import { SupabaseService } from '../../core/services/supabase.service';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 @Component({
   selector: 'app-header',
@@ -25,11 +27,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
   invites: GameInvite[] = [];
 
   private pollInterval: any;
+  private gameCreatedChannel: RealtimeChannel | null = null;
 
   constructor(
     private auth: AuthService,
     private gameService: GameService,
     private api: ApiService,
+    private sb: SupabaseService,
     private router: Router
   ) {}
 
@@ -39,11 +43,21 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.initials = this.getInitials(this.name || this.email);
     this.loadPoints();
     this.loadInvites();
-    this.pollInterval = setInterval(() => this.loadInvites(), 15000);
+    this.watchForGameCreated();
   }
 
   ngOnDestroy() {
     clearInterval(this.pollInterval);
+    if (this.gameCreatedChannel) this.sb.removeChannel(this.gameCreatedChannel);
+  }
+
+  private async watchForGameCreated() {
+    const userId = await this.sb.getUserId();
+    if (!userId) return;
+    this.gameCreatedChannel = this.gameService.subscribeToGameCreated(userId, (game: any) => {
+      // Sender gets navigated to the game once receiver accepts
+      this.router.navigate(['/game', game.id]);
+    });
   }
 
   private loadPoints() {

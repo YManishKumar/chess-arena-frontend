@@ -112,6 +112,20 @@ export class GameService implements OnDestroy {
     return this.inviteChannel;
   }
 
+  // Sender watches for a new game being created where they are white_player (= invite accepted)
+  subscribeToGameCreated(userId: string, onGame: (game: any) => void): RealtimeChannel {
+    const channel = this.sb.client
+      .channel(`new-game-${userId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'games',
+        filter: `white_player=eq.${userId}`
+      }, payload => onGame(payload.new))
+      .subscribe();
+    return channel;
+  }
+
   ngOnDestroy() {
     if (this.gameChannel) this.sb.removeChannel(this.gameChannel);
     if (this.inviteChannel) this.sb.removeChannel(this.inviteChannel);
