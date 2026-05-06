@@ -1,4 +1,4 @@
-$cell: 62px;
+$cell: 66px;
 $cell-mobile: 42px;
 
 .play-shell {
@@ -341,13 +341,34 @@ $cell-mobile: 42px;
 .no-moves { font-size: 12px; color: rgba(255,255,255,0.2); padding: 8px 0; text-align: center; }
 
 /* ================================================================
-   CHESS BOARD
+   CHESS BOARD — Royal marble style
    ================================================================ */
 .board-area {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
+}
+
+.board-3d-wrap {
+  width: 560px;
+  height: 560px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px #8a6914,
+    0 12px 50px rgba(0,0,0,0.85),
+    0 0 60px rgba(201,162,39,0.12);
+
+  app-chess-board-3d { display: block; width: 100%; height: 100%; }
+
+  @media (max-width: 768px) {
+    width: calc(100vw - 8px);
+    height: calc(100vw - 8px);
+    max-width: 480px;
+    max-height: 480px;
+    border-radius: 8px;
+  }
 }
 
 .board-outer {
@@ -369,17 +390,41 @@ $cell-mobile: 42px;
   justify-content: center;
   font-size: 10px;
   font-weight: 600;
-  color: rgba(255,255,255,0.25);
+  color: rgba(201,162,39,0.5);
   font-family: 'Orbitron', sans-serif;
 }
 
 .board-col { display: flex; flex-direction: column; }
 
+/* Gold ornate frame */
+.board-frame {
+  padding: 10px;
+  background: linear-gradient(145deg, #b8860b 0%, #f0d060 20%, #c9a227 40%, #fce878 55%, #c9a227 70%, #f0d060 85%, #b8860b 100%);
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 1px #8a6914,
+    0 12px 50px rgba(0,0,0,0.85),
+    0 0 80px rgba(201,162,39,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.3);
+  position: relative;
+
+  /* Corner ornament dots */
+  &::before {
+    content: '◈ ◈ ◈ ◈';
+    position: absolute;
+    top: 2px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 7px;
+    letter-spacing: 8px;
+    color: rgba(139,105,20,0.7);
+    pointer-events: none;
+  }
+}
+
 .board {
-  border: 2px solid rgba(108,99,255,0.3);
-  border-radius: 6px;
+  border-radius: 3px;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 50px rgba(108,99,255,0.08);
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
 }
 
 .board-row { display: flex; }
@@ -394,11 +439,11 @@ $cell-mobile: 42px;
   text-align: center;
   font-size: 10px;
   font-weight: 600;
-  color: rgba(255,255,255,0.25);
+  color: rgba(201,162,39,0.5);
   font-family: 'Orbitron', sans-serif;
 }
 
-/* ---- Cells ---- */
+/* ---- Cells — marble look ---- */
 .cell {
   width: $cell;
   height: $cell;
@@ -407,47 +452,63 @@ $cell-mobile: 42px;
   justify-content: center;
   cursor: pointer;
   position: relative;
-  transition: filter 0.1s;
+  transition: filter 0.12s;
   user-select: none;
 
-  &.light { background: #c8d8e8; }
-  &.dark  { background: #1e3f6b; }
+  /* Light tile — ivory marble */
+  &.light {
+    background-color: #e8dfc8;
+    background-image:
+      radial-gradient(ellipse at 20% 30%, rgba(255,255,255,0.18) 0%, transparent 55%),
+      radial-gradient(ellipse at 80% 70%, rgba(200,185,150,0.2) 0%, transparent 50%);
+  }
 
-  &:hover:not(.selected) { filter: brightness(1.15); }
+  /* Dark tile — deep ebony */
+  &.dark {
+    background-color: #2a1a0e;
+    background-image:
+      radial-gradient(ellipse at 30% 20%, rgba(80,50,20,0.35) 0%, transparent 55%),
+      radial-gradient(ellipse at 70% 80%, rgba(20,10,5,0.4) 0%, transparent 50%);
+  }
 
-  &.selected     { background: rgba(247,183,49,0.85) !important; box-shadow: inset 0 0 0 3px rgba(247,183,49,0.9); }
-  &.last-move.light { background: #cdd69b; }
-  &.last-move.dark  { background: #a8b56e; }
-  &.in-check     { background: rgba(252,92,101,0.8) !important; }
+  &:hover:not(.selected) { filter: brightness(1.18); }
+
+  &.selected     { background: rgba(240,192,50,0.85) !important; box-shadow: inset 0 0 0 3px rgba(240,192,50,0.95); }
+  &.last-move.light { background-color: #cdd9a0 !important; }
+  &.last-move.dark  { background-color: #6a7c3a !important; }
+  &.in-check     { background: rgba(220,50,50,0.8) !important; }
 
   &.legal-capture::after {
     content: '';
     position: absolute;
     inset: 3px;
-    border: 3px solid rgba(252,92,101,0.7);
+    border: 3px solid rgba(240,100,80,0.75);
     border-radius: 3px;
     pointer-events: none;
   }
 }
 
 .legal-dot {
-  width: 20px;
-  height: 20px;
-  background: rgba(0,0,0,0.2);
+  width: 22px;
+  height: 22px;
+  background: rgba(0,0,0,0.22);
   border-radius: 50%;
   pointer-events: none;
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.08);
 }
 
 .piece {
-  font-size: 38px;
+  font-size: 40px;
   line-height: 1;
   pointer-events: none;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-  color: #111;
+  color: #1a0a04;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.6)) drop-shadow(0 1px 0 rgba(0,0,0,0.4));
 
   &.white-p {
-    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5)) drop-shadow(0 0 2px rgba(255,255,255,0.3));
-    color: #f5f0e8;
+    color: #f5ede0;
+    filter:
+      drop-shadow(0 2px 4px rgba(0,0,0,0.7))
+      drop-shadow(0 0 3px rgba(255,240,200,0.3));
   }
 }
 
@@ -508,14 +569,7 @@ $cell-mobile: 42px;
 
 .hint-lbl { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.3); }
 .hint-move-val { font-family: 'Orbitron', sans-serif; font-size: 15px; font-weight: 700; color: #f7b731; }
-
-.hint-analysis {
-  font-size: 12px;
-  line-height: 1.6;
-  color: rgba(255,255,255,0.65);
-  margin-bottom: 6px;
-}
-
+.hint-analysis { font-size: 12px; line-height: 1.6; color: rgba(255,255,255,0.65); margin-bottom: 6px; }
 .hint-why { font-size: 11px; line-height: 1.5; color: rgba(255,255,255,0.4); font-style: italic; }
 
 .coach-loading {
@@ -540,12 +594,11 @@ $cell-mobile: 42px;
   .rate-note { font-size: 10px; color: rgba(255,255,255,0.2); }
 }
 
-/* ---- AI toggle button ---- */
+/* ---- AI toggle ---- */
 .btn-ai-toggle {
   padding: 7px 14px;
   border-radius: 99px;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 12px; font-weight: 700;
   font-family: 'Inter', sans-serif;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -554,7 +607,6 @@ $cell-mobile: 42px;
   color: rgba(255,255,255,0.55);
 
   &:hover { background: rgba(108,99,255,0.22); color: #fff; }
-
   &.active {
     background: rgba(108,99,255,0.25);
     border-color: #6c63ff;
@@ -563,18 +615,14 @@ $cell-mobile: 42px;
   }
 }
 
-/* ---- AI thinking banner ---- */
+/* ---- AI thinking ---- */
 .ai-thinking-banner {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: flex; align-items: center; gap: 8px;
   background: rgba(108,99,255,0.12);
   border: 1px solid rgba(108,99,255,0.25);
   border-radius: 8px;
   padding: 8px 14px;
-  font-size: 12px;
-  color: #a8a2ff;
-  font-weight: 600;
+  font-size: 12px; color: #a8a2ff; font-weight: 600;
   margin-bottom: 8px;
   animation: pulse-ai 1.2s ease infinite;
 }
@@ -592,7 +640,6 @@ $cell-mobile: 42px;
   animation: spin 0.7s linear infinite;
 }
 
-/* ---- AI last move result ---- */
 .ai-move-result {
   background: rgba(240,192,64,0.06);
   border: 1px solid rgba(240,192,64,0.15);
@@ -601,18 +648,116 @@ $cell-mobile: 42px;
   margin-bottom: 10px;
 }
 
-/* ---- Language ctrl-btn active ---- */
 .ctrl-btn.active {
   background: rgba(108,99,255,0.2);
   border-color: rgba(108,99,255,0.4);
   color: #a8a2ff;
 }
 
-/* ---- Mobile ---- */
-@media (max-width: $cell * 8 + 100px) {
-  .rank-label { width: 14px; height: $cell-mobile; }
-  .file-label { width: $cell-mobile; }
-  .cell       { width: $cell-mobile; height: $cell-mobile; }
-  .piece      { font-size: 26px; }
-  .legal-dot  { width: 14px; height: 14px; }
+/* ================================================================
+   MOBILE — board-first, sidebars hidden/bottom
+   ================================================================ */
+@media (max-width: 768px) {
+
+  .play-shell {
+    padding: 0;
+  }
+
+  .play-header {
+    padding: 10px 14px 8px;
+    margin-bottom: 0;
+    background: rgba(8,4,24,0.95);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .play-title { font-size: 15px; }
+  .play-sub   { display: none; }
+
+  .play-layout {
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  /* Hide sidebars on mobile — board is hero */
+  .sidebar-left, .sidebar-right, .play-sidebar {
+    display: none !important;
+  }
+
+  /* Board fills screen width */
+  .board-area {
+    width: 100%;
+    gap: 0;
+    padding: 0;
+  }
+
+  .board-outer {
+    gap: 0;
+    justify-content: center;
+  }
+
+  /* Hide rank/file labels on mobile to save space */
+  .rank-labels, .file-labels {
+    display: none;
+  }
+
+  /* Board frame takes full width */
+  .board-frame {
+    padding: 7px;
+    width: calc(100vw - 8px);
+    max-width: 480px;
+    box-sizing: border-box;
+  }
+
+  /* Cells fill frame */
+  .board { width: 100%; }
+  .board-row { display: flex; }
+
+  .cell {
+    width: calc((100vw - 22px) / 8);
+    height: calc((100vw - 22px) / 8);
+    max-width: 58px;
+    max-height: 58px;
+  }
+
+  .piece      { font-size: clamp(22px, 6vw, 36px); }
+  .legal-dot  { width: 15px; height: 15px; }
+
+  /* Mobile bottom action bar */
+  .coach-buttons {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    padding: 10px 12px;
+    background: rgba(8,4,24,0.96);
+    border-top: 1px solid rgba(108,99,255,0.18);
+    backdrop-filter: blur(12px);
+    z-index: 50;
+    gap: 8px;
+    flex-wrap: nowrap;
+    justify-content: stretch;
+
+    .btn, button {
+      flex: 1;
+      font-size: 13px;
+      padding: 10px 6px;
+    }
+  }
+
+  /* Status badge compact */
+  .status-badge {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+}
+
+/* Small phones */
+@media (max-width: 380px) {
+  .board-frame { padding: 5px; width: 100vw; border-radius: 0; }
+  .cell {
+    width: calc(100vw / 8);
+    height: calc(100vw / 8);
+  }
 }

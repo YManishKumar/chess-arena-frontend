@@ -145,36 +145,19 @@
 
     </div>
 
-    <!-- Board -->
+    <!-- Board — 3D overhead renders real Staunton pieces -->
     <div class="board-area">
-      <!-- 2D Board -->
-      <div class="board-outer" *ngIf="viewMode === '2d'">
-        <div class="rank-labels">
-          <span class="rank-label" *ngFor="let r of displayRanks">{{ r }}</span>
-        </div>
-        <div class="board-col">
-          <div class="board">
-            <div class="board-row" *ngFor="let row of displayBoard">
-              <div class="cell"
-                   *ngFor="let cell of row"
-                   [class.light]="cell.isLight"
-                   [class.dark]="!cell.isLight"
-                   [class.selected]="cell.isSelected"
-                   [class.legal-move]="cell.isLegalMove && !cell.piece"
-                   [class.legal-capture]="cell.isLegalMove && !!cell.piece"
-                   [class.last-move]="cell.isLastMove"
-                   [class.in-check]="cell.isCheck"
-                   (click)="clickSquare(cell.square)">
-                <span class="piece" *ngIf="cell.piece"
-                      [class.white-p]="cell.piece.color === 'w'">{{ pieceSymbol(cell.piece) }}</span>
-                <span class="legal-dot" *ngIf="cell.isLegalMove && !cell.piece"></span>
-              </div>
-            </div>
-          </div>
-          <div class="file-labels">
-            <span class="file-label" *ngFor="let f of displayFiles">{{ f }}</span>
-          </div>
-        </div>
+      <div class="board-3d-wrap" *ngIf="viewMode === '2d'">
+        <app-chess-board-3d
+          [fen]="currentFen"
+          [selectedSquare]="selectedSquare"
+          [legalMoves]="legalMoves"
+          [lastMove]="lastMove"
+          [isFlipped]="isFlipped"
+          [checkSquare]="checkSq"
+          [overhead]="true"
+          (squareClick)="clickSquare($event)">
+        </app-chess-board-3d>
       </div>
 
       <!-- AI thinking banner -->

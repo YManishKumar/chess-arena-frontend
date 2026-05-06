@@ -5,6 +5,7 @@ import {
 import { CommonModule } from '@angular/common';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { Chess, Square } from 'chess.js';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -137,6 +138,8 @@ export class ChessBoard3DComponent implements AfterViewInit, OnDestroy, OnChange
   @Input() lastMove: { from: Square; to: Square } | null = null;
   @Input() isFlipped     = false;
   @Input() checkSquare: Square | null    = null;
+  // overhead=true: skip intro, fixed top-angle camera, royal marble look (2D-view replacement)
+  @Input() overhead      = false;
 
   @Output() squareClick = new EventEmitter<Square>();
 
@@ -160,6 +163,10 @@ export class ChessBoard3DComponent implements AfterViewInit, OnDestroy, OnChange
   private planeGeo!: THREE.PlaneGeometry;
   private discGeo!: THREE.CylinderGeometry;
   private ringGeo!: THREE.TorusGeometry;
+  private baseRingGeo!: THREE.TorusGeometry;
+
+  // Environment
+  private envMap: THREE.Texture | null = null;
 
   // Materials
   private M!: Record<string, THREE.MeshStandardMaterial>;
@@ -181,14 +188,21 @@ export class ChessBoard3DComponent implements AfterViewInit, OnDestroy, OnChange
   ngAfterViewInit() {
     this.ngZone.runOutsideAngular(() => {
       this.initThree();
-      this.buildStars();
-      this.buildIntroParticles();
+      if (!this.overhead) {
+        this.buildStars();
+        this.buildIntroParticles();
+      }
       this.buildBoard();
       this.buildSharedGeos();
+      if (this.overhead) this.phase = 'play';
       this.startLoop();
       this.setupResize();
       this.setupEvents();
-      this.startIntro();
+      if (this.overhead) {
+        this.startOverhead();
+      } else {
+        this.startIntro();
+      }
       this.ready = true;
     });
   }
@@ -207,6 +221,7 @@ export class ChessBoard3DComponent implements AfterViewInit, OnDestroy, OnChange
   ngOnDestroy() {
     cancelAnimationFrame(this.animId);
     this.resizeObs?.disconnect();
+    this.envMap?.dispose();
     this.renderer?.dispose();
   }
 
@@ -225,16 +240,25 @@ export class ChessBoard3DComponent implements AfterViewInit, OnDestroy, OnChange
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping         = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.2;
-    // Deep midnight-blue background — not pure black, rich and cinematic
-    this.renderer.setClearColor(0x0a0820, 1);
+    this.renderer.toneMappingExposure = this.overhead ? 0.9 : 1.2;
+    const bg = this.overhead ? 0x060404 : 0x0a0820;
+    this.renderer.setClearColor(bg, 1);
 
     this.scene  = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x0a0820);
-    this.scene.fog = new THREE.FogExp2(0x0d0a28, 0.018);
+    this.scene.background = new THREE.Color(bg);
+    if (!this.overhead) this.scene.fog = new THREE.FogExp2(0x0d0a28, 0.018);
 
-    this.camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 300);
-    this.camera.position.set(0, 28, 18);   // intro start position
+    // PMREMGenerator — dim studio env for subtle reflections only (NOT applied to background)
+    if (this.overhead) {
+      const pmrem = new THREE.PMREMGenerator(this.renderer);
+      pmrem.compileEquirectangularShader();
+      this.envMap = pmrem.fromScene(new RoomEnvironment(), 0.02).texture;
+      // Apply to materials only — don't set scene.environment to avoid grey wash
+      pmrem.dispose();
+    }
+
+    this.camera = new THREE.PerspectiveCamera(this.overhead ? 42 : 50, W / H, 0.1, 300);
+    this.camera.position.set(0, 28, 18);
     this.camera.lookAt(0, 0, 0);
 
     this.controls = new OrbitControls(this.camera, canvas);
@@ -245,43 +269,86 @@ export class ChessBoard3DComponent implements AfterViewInit, OnDestroy, OnChange
     this.controls.maxPolarAngle  = Math.PI / 2.05;
     this.controls.minPolarAngle  = 0.1;
     this.controls.enablePan      = false;
-    this.controls.enabled        = false; // disabled during intro
+    this.controls.enabled        = false;
 
-    // Lights — ambient raised so black pieces are always readable
-    this.scene.add(new THREE.AmbientLight(0xaabbdd, 1.8));
+    if (this.overhead) {
+      // Luxury studio lighting — warm key + cool fill + gold rim + soft ambient
+      this.scene.add(new THREE.AmbientLight(0xfff8f0, 1.4));
 
-    const sun = new THREE.DirectionalLight(0xfff4e0, 2.8);
-    sun.position.set(8, 16, 10);
-    sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
-    Object.assign(sun.shadow.camera, { left: -10, right: 10, top: 10, bottom: -10, near: 0.5, far: 60 });
-    sun.shadow.bias = -0.001;
-    this.scene.add(sun);
+      // Key light: warm from upper-right front
+      const key = new THREE.DirectionalLight(0xfff5e0, 4.0);
+      key.position.set(6, 20, 10); key.castShadow = true;
+      key.shadow.mapSize.set(4096, 4096);
+      Object.assign(key.shadow.camera, { left: -14, right: 14, top: 14, bottom: -14, near: 0.5, far: 80 });
+      key.shadow.bias = -0.0005;
+      key.shadow.normalBias = 0.02;
+      this.scene.add(key);
 
-    // Fill light from front-left — illuminates black pieces facing camera
-    const fill = new THREE.DirectionalLight(0xccddff, 1.6);
-    fill.position.set(-5, 8, 10);
-    this.scene.add(fill);
+      // Fill: cool blue-white from left
+      const fill = new THREE.DirectionalLight(0xd0e8ff, 1.6);
+      fill.position.set(-8, 14, 4); this.scene.add(fill);
 
-    const rim1 = new THREE.PointLight(0x9966ff, 3, 30);
-    rim1.position.set(-8, 8, -6);
-    this.scene.add(rim1);
+      // Back rim: warm cream from behind
+      const back = new THREE.DirectionalLight(0xffe8c0, 1.0);
+      back.position.set(0, 12, -14); this.scene.add(back);
+
+      // Gold point lights near frame for metallic glow
+      const gold1 = new THREE.PointLight(0xd4a017, 3.0, 18);
+      gold1.position.set(0, 2, 7); this.scene.add(gold1);
+      const gold2 = new THREE.PointLight(0xd4a017, 2.0, 18);
+      gold2.position.set(0, 2, -7); this.scene.add(gold2);
+
+      // Soft under-table ambient for ground reflections
+      const under = new THREE.PointLight(0x1a0a00, 0.8, 12);
+      under.position.set(0, -2, 0); this.scene.add(under);
+    } else {
+      // Cinematic lighting
+      this.scene.add(new THREE.AmbientLight(0xaabbdd, 1.8));
+
+      const sun = new THREE.DirectionalLight(0xfff4e0, 2.8);
+      sun.position.set(8, 16, 10); sun.castShadow = true;
+      sun.shadow.mapSize.set(2048, 2048);
+      Object.assign(sun.shadow.camera, { left: -10, right: 10, top: 10, bottom: -10, near: 0.5, far: 60 });
+      sun.shadow.bias = -0.001;
+      this.scene.add(sun);
+
+      const fill = new THREE.DirectionalLight(0xccddff, 1.6);
+      fill.position.set(-5, 8, 10); this.scene.add(fill);
+
+      const rim1 = new THREE.PointLight(0x9966ff, 3, 30);
+      rim1.position.set(-8, 8, -6); this.scene.add(rim1);
+    }
 
     const rim2 = new THREE.PointLight(0x66ccff, 2.5, 25);
     rim2.position.set(8, 6, -8);
     this.scene.add(rim2);
 
-    const under = new THREE.PointLight(0x440088, 1.2, 15);
-    under.position.set(0, -3, 0);
-    this.scene.add(under);
+    if (!this.overhead) {
+      const rim2 = new THREE.PointLight(0x66ccff, 2.5, 25);
+      rim2.position.set(8, 6, -8); this.scene.add(rim2);
+      const under = new THREE.PointLight(0x440088, 1.2, 15);
+      under.position.set(0, -3, 0); this.scene.add(under);
+    }
 
-    // Materials
+    // Materials — overhead uses true marble black/white, cinematic uses wood
+    const lightTileColor = this.overhead ? 0xf5f0e8 : 0xe8d9b8;
+    const darkTileColor  = this.overhead ? 0x0a0808 : 0x5c3218;
+    const edgeColor      = this.overhead ? 0xc9a227 : 0x9070ff;
+    const edgeEmissive   = this.overhead ? 0xb8860b : 0x9070ff;
+
+    const lt = m({ color: lightTileColor, roughness: this.overhead ? 0.22 : 0.75, metalness: this.overhead ? 0.0 : 0.04 });
+    const dt = m({ color: darkTileColor,  roughness: this.overhead ? 0.14 : 0.62, metalness: this.overhead ? 0.0 : 0.06 });
+    if (this.overhead && this.envMap) {
+      lt.envMap = this.envMap; lt.envMapIntensity = 0.35;
+      dt.envMap = this.envMap; dt.envMapIntensity = 0.55;
+    }
+
     this.M = {
       // Board
-      lightTile: m({ color: 0xe8d9b8, roughness: 0.75, metalness: 0.04 }),  // warm maple
-      darkTile:  m({ color: 0x5c3218, roughness: 0.62, metalness: 0.06 }),  // rich walnut (brighter for contrast)
-      frame:     m({ color: 0x0f0804, roughness: 0.92, metalness: 0.05 }),
-      edge:      m({ color: 0x9070ff, emissive: 0x9070ff, emissiveInt: 0.6, roughness: 0.3, metalness: 0.5 }),
+      lightTile: lt,
+      darkTile:  dt,
+      frame:     m({ color: this.overhead ? 0x1c1206 : 0x0f0804, roughness: this.overhead ? 0.65 : 0.92, metalness: this.overhead ? 0.15 : 0.05 }),
+      edge:      m({ color: edgeColor, emissive: edgeEmissive, emissiveInt: this.overhead ? 0.5 : 0.6, roughness: 0.2, metalness: this.overhead ? 0.85 : 0.5 }),
       // Pieces — MeshPhysicalMaterial created below
       whitePc:   null as any,
       blackPc:   null as any,
@@ -294,23 +361,57 @@ export class ChessBoard3DComponent implements AfterViewInit, OnDestroy, OnChange
       pulse:     m({ color: 0xffffff, emissive: 0xffffff, emissiveInt: 1.0,  transparent: true, opacity: 0.8,  roughness: 0.1, metalness: 0.1 }),
     };
 
-    // Polished chess piece materials (clearcoat = lacquered wood look)
-    this.M['whitePc'] = new THREE.MeshPhysicalMaterial({
-      color: 0xf5ede0,       // warm ivory
-      roughness: 0.10,
-      metalness: 0.0,
-      clearcoat: 0.95,
-      clearcoatRoughness: 0.07,
-    });
-    this.M['blackPc'] = new THREE.MeshPhysicalMaterial({
-      color: 0x2c1a2e,           // dark rosewood — visible but still "black" chess piece
-      roughness: 0.12,
-      metalness: 0.0,
-      clearcoat: 1.0,
-      clearcoatRoughness: 0.05,
-      emissive: new THREE.Color(0x1a0c20),
-      emissiveIntensity: 0.25,  // subtle self-glow so they're readable in shadows
-    });
+    if (this.overhead) {
+      // Ivory marble — warm white, polished, subtle clearcoat sheen
+      const wp = new THREE.MeshPhysicalMaterial({
+        color: 0xf0ebe0,
+        roughness: 0.12,
+        metalness: 0.0,
+        clearcoat: 0.85,
+        clearcoatRoughness: 0.08,
+        reflectivity: 0.6,
+      });
+      if (this.envMap) { wp.envMap = this.envMap; wp.envMapIntensity = 0.6; }
+      this.M['whitePc'] = wp;
+
+      // Obsidian — deep black, slight gloss highlight, NOT chrome
+      const bp = new THREE.MeshPhysicalMaterial({
+        color: 0x18141e,
+        roughness: 0.22,
+        metalness: 0.0,
+        clearcoat: 0.9,
+        clearcoatRoughness: 0.15,
+        emissive: new THREE.Color(0x120a1a),
+        emissiveIntensity: 0.12,
+        reflectivity: 0.7,
+      });
+      if (this.envMap) { bp.envMap = this.envMap; bp.envMapIntensity = 0.5; }
+      this.M['blackPc'] = bp;
+
+      // Gold — metallic, warm, for base rings
+      const gp = new THREE.MeshPhysicalMaterial({
+        color: 0xc8960c,
+        roughness: 0.18,
+        metalness: 1.0,
+        emissive: new THREE.Color(0x7a5500),
+        emissiveIntensity: 0.15,
+      });
+      if (this.envMap) { gp.envMap = this.envMap; gp.envMapIntensity = 1.2; }
+      this.M['goldRing'] = gp;
+    } else {
+      this.M['whitePc'] = new THREE.MeshPhysicalMaterial({
+        color: 0xf5ede0,
+        roughness: 0.10, metalness: 0.0,
+        clearcoat: 0.95, clearcoatRoughness: 0.07,
+      });
+      this.M['blackPc'] = new THREE.MeshPhysicalMaterial({
+        color: 0x2c1a2e,
+        roughness: 0.12, metalness: 0.0,
+        clearcoat: 1.0, clearcoatRoughness: 0.05,
+        emissive: new THREE.Color(0x1a0c20),
+        emissiveIntensity: 0.25,
+      });
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -389,6 +490,24 @@ export class ChessBoard3DComponent implements AfterViewInit, OnDestroy, OnChange
   // ═══════════════════════════════════════════════════════════════════════════
 
   private buildBoard() {
+    // Ground plane — black marble table for overhead mode
+    if (this.overhead) {
+      const tableMat = new THREE.MeshPhysicalMaterial({
+        color: 0x080606,
+        roughness: 0.28,
+        metalness: 0.0,
+        clearcoat: 0.6,
+        clearcoatRoughness: 0.2,
+        reflectivity: 0.5,
+      });
+      if (this.envMap) { tableMat.envMap = this.envMap; tableMat.envMapIntensity = 0.3; }
+      const table = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), tableMat);
+      table.rotation.x = -Math.PI / 2;
+      table.position.y = -0.18;
+      table.receiveShadow = true;
+      this.scene.add(table);
+    }
+
     // Frame
     const frame = new THREE.Mesh(new THREE.BoxGeometry(8.8, 0.14, 8.8), this.M['frame']);
     frame.position.y = -0.09;
@@ -425,9 +544,46 @@ export class ChessBoard3DComponent implements AfterViewInit, OnDestroy, OnChange
   }
 
   private buildSharedGeos() {
-    this.planeGeo = new THREE.PlaneGeometry(0.92, 0.92);
-    this.discGeo  = new THREE.CylinderGeometry(0.19, 0.19, 0.012, 24);
-    this.ringGeo  = new THREE.TorusGeometry(0.38, 0.055, 8, 24);
+    this.planeGeo   = new THREE.PlaneGeometry(0.92, 0.92);
+    this.discGeo    = new THREE.CylinderGeometry(0.19, 0.19, 0.012, 24);
+    this.ringGeo    = new THREE.TorusGeometry(0.38, 0.055, 8, 24);
+    this.baseRingGeo = new THREE.TorusGeometry(0.21, 0.028, 10, 32);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  OVERHEAD MODE (2D replacement — no intro, fixed camera)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  private startOverhead() {
+    // Cinematic angle — not pure top-down, slight front perspective
+    this.camera.position.set(0, 12, 8);
+    this.camera.lookAt(0, 0, 0);
+    this.controls.enabled = true;
+    this.controls.minPolarAngle = 0.25;
+    this.controls.maxPolarAngle = Math.PI / 2.6;
+    this.controls.minDistance = 9;
+    this.controls.maxDistance = 20;
+
+    // Tiles immediately at final position
+    for (const tile of this.tileMap.values()) tile.position.y = 0;
+
+    // Spawn pieces from FEN immediately
+    this.phase = 'play';
+    try { this.chess.load(this.fen); } catch { /* */ }
+    const board = this.chess.board();
+    for (let ri = 0; ri < 8; ri++) {
+      for (let fi = 0; fi < 8; fi++) {
+        const p = board[ri][fi];
+        if (!p) continue;
+        const sq = `${String.fromCharCode(97 + fi)}${8 - ri}` as Square;
+        this.spawnPieceAt(sq, p.type, p.color);
+      }
+    }
+
+    const overlay = this.overlayRef?.nativeElement;
+    if (overlay) { overlay.style.opacity = '0'; overlay.style.pointerEvents = 'none'; }
+
+    this.refreshHighlights();
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -465,7 +621,7 @@ export class ChessBoard3DComponent implements AfterViewInit, OnDestroy, OnChange
   }
 
   private updateIntro(now: number) {
-    if (this.phase !== 'intro') return;
+    if (this.phase !== 'intro' || !this.stars || !this.introParticles) return;
     const elapsed = now - this.introT0;
     const T = Math.min(elapsed / this.INTRO_DUR, 1);
 
@@ -630,6 +786,18 @@ export class ChessBoard3DComponent implements AfterViewInit, OnDestroy, OnChange
     const base = this.sqToVec3(sq);
     g.position.set(base.x, base.y + this.yOff(type), base.z);
     g.castShadow = true;
+
+    // Gold base ring — luxury detail on overhead mode
+    if (this.overhead && this.M['goldRing']) {
+      const ring = new THREE.Mesh(this.baseRingGeo, this.M['goldRing'].clone());
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.set(base.x, base.y + 0.096, base.z);
+      ring.castShadow = false;
+      ring.receiveShadow = true;
+      this.scene.add(ring);
+      g.userData['goldRing'] = ring;
+    }
+
     this.scene.add(g);
     this.pieceMap.set(sq, g);
     return g;
@@ -788,7 +956,7 @@ export class ChessBoard3DComponent implements AfterViewInit, OnDestroy, OnChange
           this.pieceMap.delete(destSq);
           this.animatePiece(enemy, enemy.position.clone(),
             new THREE.Vector3(enemy.position.x, enemy.position.y + 3.5, enemy.position.z), 220, 0.5, true);
-          setTimeout(() => this.scene.remove(enemy), 260);
+          setTimeout(() => this.removeGroup(enemy), 260);
         }
         const toBase = this.sqToVec3(destSq);
         const destT  = gained.get(destSq)!.type;
@@ -802,7 +970,7 @@ export class ChessBoard3DComponent implements AfterViewInit, OnDestroy, OnChange
         const cp = grp.position.clone();
         this.animatePiece(grp, cp, new THREE.Vector3(cp.x, cp.y + 3.5, cp.z), 220, 0.5, true);
         this.pieceMap.delete(fromSq);
-        setTimeout(() => this.scene.remove(grp), 260);
+        setTimeout(() => this.removeGroup(grp), 260);
       }
     }
     for (const [sq, p] of gained) {
@@ -811,8 +979,14 @@ export class ChessBoard3DComponent implements AfterViewInit, OnDestroy, OnChange
     try { this.chess.load(newFen); } catch { /**/ }
   }
 
+  private removeGroup(g: THREE.Group) {
+    const ring = g.userData['goldRing'] as THREE.Mesh | undefined;
+    if (ring) this.scene.remove(ring);
+    this.scene.remove(g);
+  }
+
   private fullRebuild(fen: string) {
-    for (const [, g] of this.pieceMap) this.scene.remove(g);
+    for (const [, g] of this.pieceMap) this.removeGroup(g);
     this.pieceMap.clear();
     this.chess = new Chess();
     try { this.chess.load(fen); } catch { return; }
@@ -907,7 +1081,11 @@ export class ChessBoard3DComponent implements AfterViewInit, OnDestroy, OnChange
       const x = a.from.x + (a.to.x - a.from.x) * e;
       const z = a.from.z + (a.to.z - a.from.z) * e;
       const arcY = a.vanish ? 0 : Math.sin(t * Math.PI) * a.arc;
-      a.group.position.set(x, a.from.y + (a.to.y - a.from.y) * e + arcY, z);
+      const y = a.from.y + (a.to.y - a.from.y) * e + arcY;
+      a.group.position.set(x, y, z);
+      // sync gold base ring
+      const ring = a.group.userData['goldRing'] as THREE.Mesh | undefined;
+      if (ring) ring.position.set(x, y - this.yOff(a.group.userData['type']) + 0.096, z);
       return t < 1;
     });
   }
