@@ -1,0 +1,117 @@
+<header class="global-header">
+  <div class="header-inner">
+
+    <!-- Logo -->
+    <a routerLink="/dashboard" class="logo" (click)="closeMenu()">
+      <div class="logo-icon-wrap">
+        <span class="logo-chess">♟</span>
+        <div class="logo-glow"></div>
+      </div>
+      <div class="logo-text-wrap">
+        <span class="logo-text">Chess Arena</span>
+        <span class="logo-sub">PLAY · COMPETE · CONQUER</span>
+      </div>
+    </a>
+
+    <!-- Desktop Nav -->
+    <nav class="nav" [class.open]="menuOpen">
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-link" (click)="closeMenu()">
+        <span class="nav-icon">⬡</span>
+        <span>Dashboard</span>
+      </a>
+      <a routerLink="/play" routerLinkActive="active" class="nav-link" (click)="closeMenu()">
+        <span class="nav-icon">♟</span>
+        <span>Practice</span>
+      </a>
+      <a routerLink="/friends" routerLinkActive="active" class="nav-link" (click)="closeMenu()">
+        <span class="nav-icon">◈</span>
+        <span>Friends</span>
+      </a>
+      <a routerLink="/chat" routerLinkActive="active" class="nav-link" (click)="closeMenu()">
+        <span class="nav-icon">◎</span>
+        <span>AI Coach</span>
+      </a>
+      <a routerLink="/analysis" routerLinkActive="active" class="nav-link" (click)="closeMenu()">
+        <span class="nav-icon">⊞</span>
+        <span>Analysis</span>
+      </a>
+      <a routerLink="/puzzle" routerLinkActive="active" class="nav-link" (click)="closeMenu()">
+        <span class="nav-icon">◉</span>
+        <span>Puzzle</span>
+      </a>
+      <a routerLink="/wrapped" routerLinkActive="active" class="nav-link" (click)="closeMenu()">
+        <span class="nav-icon">🎁</span>
+        <span>Wrapped</span>
+      </a>
+    </nav>
+
+    <!-- Right actions -->
+    <div class="header-actions">
+      <!-- Points badge -->
+      <div class="points-badge" *ngIf="points !== null">
+        <span class="points-icon">◆</span>
+        <span class="points-value">{{ points }}</span>
+        <span class="points-label">pts</span>
+      </div>
+
+      <!-- Invite notification bell -->
+      <button class="bell-btn" (click)="toggleInvites()" [class.has-invites]="invites.length > 0">
+        <span>⚑</span>
+        <span class="bell-count" *ngIf="invites.length > 0">{{ invites.length }}</span>
+      </button>
+
+      <!-- User avatar -->
+      <div class="user-chip" (click)="toggleUserMenu()" [class.open]="userMenuOpen">
+        <div class="avatar avatar-sm">{{ initials }}</div>
+        <span class="user-name">{{ name }}</span>
+        <span class="chevron">▾</span>
+      </div>
+
+      <!-- User dropdown -->
+      <div class="user-dropdown" *ngIf="userMenuOpen" (click)="userMenuOpen = false">
+        <div class="dropdown-info">
+          <div class="avatar avatar-md">{{ initials }}</div>
+          <div>
+            <div class="dropdown-name">{{ name }}</div>
+            <div class="dropdown-email">{{ email }}</div>
+          </div>
+        </div>
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item danger" (click)="logout()">
+          <span>⏻</span>
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Hamburger -->
+    <button class="hamburger" (click)="toggleMenu()" [class.open]="menuOpen" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+
+  </div>
+
+  <!-- Invite panel -->
+  <div class="invite-panel" *ngIf="showInvites && invites.length > 0">
+    <div class="invite-panel-header">
+      <span class="invite-panel-title">Game Invites</span>
+      <button class="btn btn-ghost btn-sm" (click)="showInvites = false">✕</button>
+    </div>
+    <div class="invite-list">
+      <div class="invite-item" *ngFor="let inv of invites">
+        <div class="avatar avatar-sm">{{ getInitials(inv.from_profile?.name || inv.from_profile?.email || '?') }}</div>
+        <div class="invite-info">
+          <div class="invite-from">{{ inv.from_profile?.name || inv.from_profile?.email }}</div>
+          <div class="invite-sub">challenges you to a match</div>
+        </div>
+        <div class="invite-actions">
+          <button class="btn btn-sm btn-emerald" (click)="acceptInvite(inv)">Accept</button>
+          <button class="btn btn-sm btn-ghost"   (click)="rejectInvite(inv)">Decline</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay -->
+  <div class="nav-overlay" *ngIf="menuOpen || userMenuOpen" (click)="closeAll()"></div>
+</header>

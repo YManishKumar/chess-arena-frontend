@@ -1,0 +1,309 @@
+<!-- ════════════════════════════════════════════════════════
+     3D Full-Screen Mode
+════════════════════════════════════════════════════════ -->
+<div class="game-3d-fullscreen" *ngIf="viewMode === '3d'">
+  <app-chess-board-3d
+    [fen]="currentFen"
+    [selectedSquare]="selectedSquare"
+    [legalMoves]="legalMoves"
+    [lastMove]="lastMove"
+    [isFlipped]="isFlipped"
+    [checkSquare]="checkSq"
+    (squareClick)="clickSquare($event)">
+  </app-chess-board-3d>
+
+  <div class="hud-top">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="hud-title">{{ aiMode ? 'vs AI' : 'Practice' }}</span>
+      <span class="hud-status" [class.check]="gameStatus.includes('check')">{{ gameStatus }}</span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="hud-btn" [class.active]="aiMode" (click)="toggleAiMode()">
+        {{ aiMode ? '🤖 AI On' : '🤖 vs AI' }}
+      </button>
+      <ng-container>
+        <button class="hud-btn hud-diff" *ngFor="let d of difficulties"
+                [class.active]="aiDifficulty===d.value"
+                (click)="setDifficulty(d.value)"
+                [title]="d.elo + ' ELO'">{{ d.icon }} {{ d.label }}</button>
+      </ng-container>
+      <button class="hud-btn" (click)="toggleViewMode()">2D</button>
+    </div>
+  </div>
+
+  <div class="hud-bottom">
+    <button class="hud-btn" (click)="playAs('w')" [class.active]="playerColor==='w'">♔ White</button>
+    <button class="hud-btn" (click)="playAs('b')" [class.active]="playerColor==='b'">♚ Black</button>
+    <button class="hud-btn" (click)="undoMove()" [disabled]="moveHistory.length===0||aiThinking">↩ Undo</button>
+    <button class="hud-btn" (click)="flipBoard()">⇅ Flip</button>
+    <button class="hud-btn" (click)="resetGame()" [disabled]="aiThinking">↺ New</button>
+    <button class="hud-btn gold" (click)="getHint()" [disabled]="hintLoading||aiThinking||isGameOver()">
+      <span *ngIf="!hintLoading">⚡ Hint</span>
+      <span class="spinner" *ngIf="hintLoading"></span>
+    </button>
+    <button class="hud-btn" (click)="explainLast()" [disabled]="explainLoading||moveHistory.length===0">
+      <span *ngIf="!explainLoading">◎ Explain</span>
+      <span class="spinner" *ngIf="explainLoading"></span>
+    </button>
+  </div>
+
+  <div class="hud-thinking" *ngIf="aiThinking">
+    <span class="spinner spinner-sm"></span> AI is thinking…
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     2D Mode — standard play layout
+════════════════════════════════════════════════════════ -->
+<div class="play-shell" *ngIf="viewMode === '2d'">
+
+  <!-- ── Top bar ── -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1 class="page-title">{{ aiMode ? '🤖 vs AI' : 'Practice Board' }}</h1>
+      <span class="status-pill"
+            [class.check]="gameStatus.includes('check')"
+            [class.over]="isGameOver()">{{ gameStatus }}</span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn-toggle" [class.on]="aiMode" (click)="toggleAiMode()">
+        {{ aiMode ? '🤖 AI On' : '🤖 Play vs AI' }}
+      </button>
+      <button class="btn-secondary" (click)="toggleViewMode()">3D View</button>
+    </div>
+  </div>
+
+  <!-- ── Main content ── -->
+  <div class="play-body">
+
+    <!-- LEFT PANEL (desktop only) -->
+    <aside class="panel panel-left">
+
+      <div class="card">
+        <div class="card-label">Play As</div>
+        <div class="color-row">
+          <button class="col-btn w-btn" [class.active]="playerColor==='w'" (click)="playAs('w')">♔ White</button>
+          <button class="col-btn b-btn" [class.active]="playerColor==='b'" (click)="playAs('b')">♚ Black</button>
+        </div>
+      </div>
+
+      <div class="card diff-card">
+        <div class="card-label">AI Difficulty</div>
+        <div class="diff-list">
+          <button class="diff-btn" *ngFor="let d of difficulties"
+                  [class.active]="aiDifficulty===d.value"
+                  (click)="setDifficulty(d.value)">
+            <span class="diff-icon">{{ d.icon }}</span>
+            <span class="diff-info">
+              <span class="diff-name">{{ d.label }}</span>
+              <span class="diff-elo">{{ d.elo }} ELO</span>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Controls</div>
+        <div class="btn-stack">
+          <button class="ctrl-btn" (click)="undoMove()" [disabled]="moveHistory.length===0||aiThinking">↩ Undo</button>
+          <button class="ctrl-btn" (click)="flipBoard()">⇅ Flip Board</button>
+          <button class="ctrl-btn danger" (click)="resetGame()" [disabled]="aiThinking">↺ New Game</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">AI Language</div>
+        <div class="pill-row">
+          <button class="pill-btn" *ngFor="let l of langs"
+                  [class.active]="selectedLang===l.value"
+                  (click)="selectedLang=l.value">{{ l.label }}</button>
+        </div>
+      </div>
+
+      <div class="card moves-card">
+        <div class="card-label">Move History</div>
+        <div class="move-list">
+          <div class="move-row" *ngFor="let pair of movePairs; let i=index">
+            <span class="mn">{{ i+1 }}.</span>
+            <span class="ms" [class.lw]="i*2===moveHistory.length-1">{{ pair[0] }}</span>
+            <span class="ms bm" [class.lb]="i*2+1===moveHistory.length-1">{{ pair[1] }}</span>
+          </div>
+          <p class="no-moves" *ngIf="moveHistory.length===0">No moves yet</p>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- BOARD AREA -->
+    <div class="board-area">
+
+      <!-- AI thinking banner -->
+      <div class="thinking-bar" *ngIf="aiThinking">
+        <span class="spinner spinner-sm"></span> AI is thinking…
+      </div>
+
+      <!-- Theme picker -->
+      <div class="theme-picker">
+        <button class="theme-swatch"
+                *ngFor="let t of themes"
+                [class.selected]="currentTheme.id === t.id"
+                [style.background]="'linear-gradient(135deg,' + t.light + ' 50%,' + t.dark + ' 50%)'"
+                [title]="t.name"
+                (click)="setTheme(t)">
+        </button>
+      </div>
+
+      <!-- Board theme dropdown -->
+      <div class="board-theme-picker">
+        <button class="board-theme-btn" (click)="toggleThemePicker()">
+          🎨 Board Theme
+          <span class="theme-arrow" [class.open]="showThemePicker">▾</span>
+        </button>
+        <div class="board-theme-dropdown" *ngIf="showThemePicker">
+          <button class="board-theme-item"
+                  *ngFor="let t of boardThemes"
+                  [class.active]="currentTheme.id === t.id"
+                  (click)="setTheme(t)">
+            <span class="theme-preview"
+                  [style.background]="'linear-gradient(135deg,' + t.light + ' 50%,' + t.dark + ' 50%)'">
+            </span>
+            <span>{{ t.label }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Board wrapper (auto-sizes) -->
+      <div class="board-container">
+        <app-chess-board-2d
+          [fen]="currentFen"
+          [selectedSquare]="selectedSquare"
+          [legalMoves]="legalMoves"
+          [lastMove]="lastMove"
+          [isFlipped]="isFlipped"
+          [checkSquare]="checkSq"
+          (squareClick)="clickSquare($event)">
+        </app-chess-board-2d>
+      </div>
+
+      <!-- Mobile controls row (under board on mobile) -->
+      <div class="mobile-controls">
+        <div class="mc-row">
+          <button class="mc-btn" [class.on]="aiMode" (click)="toggleAiMode()">
+            {{ aiMode ? '🤖 AI On' : '🤖 vs AI' }}
+          </button>
+          <button class="mc-btn" (click)="playAs('w')" [class.active]="playerColor==='w'">♔ W</button>
+          <button class="mc-btn" (click)="playAs('b')" [class.active]="playerColor==='b'">♚ B</button>
+          <button class="mc-btn" (click)="undoMove()" [disabled]="moveHistory.length===0||aiThinking">↩</button>
+          <button class="mc-btn" (click)="flipBoard()">⇅</button>
+          <button class="mc-btn danger" (click)="resetGame()" [disabled]="aiThinking">↺</button>
+        </div>
+        <!-- Difficulty row — always show -->
+        <div class="mc-row">
+          <button class="mc-btn mc-diff" *ngFor="let d of difficulties"
+                  [class.active]="aiDifficulty===d.value"
+                  (click)="setDifficulty(d.value)"
+                  [title]="d.label + ' ' + d.elo + ' ELO'">
+            {{ d.icon }} {{ d.label }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Coach buttons -->
+      <div class="coach-btns">
+        <button class="btn-hint" (click)="getHint()" [disabled]="hintLoading||aiThinking||isGameOver()">
+          <span *ngIf="!hintLoading">⚡ Get Hint</span>
+          <span class="spinner" *ngIf="hintLoading"></span>
+        </button>
+        <button class="btn-explain" (click)="explainLast()" [disabled]="explainLoading||aiThinking||moveHistory.length===0">
+          <span *ngIf="!explainLoading">◎ Explain Last Move</span>
+          <span class="spinner" *ngIf="explainLoading"></span>
+        </button>
+        <button class="btn-explain" (click)="toggleCommentary()" [class.active]="commentaryEnabled">
+          💬 Commentary {{ commentaryEnabled ? 'On' : 'Off' }}
+        </button>
+        <button class="btn-explain" (click)="toggleVoice()" [class.active]="voiceEnabled" *ngIf="commentaryEnabled" title="Read commentary aloud">
+          🔊 Voice {{ voiceEnabled ? 'On' : 'Off' }}
+        </button>
+        <div class="voice-picker-wrap" *ngIf="commentaryEnabled && voiceEnabled" style="position:relative;display:inline-block;">
+          <button class="btn-explain" (click)="toggleVoicePicker()" style="font-size:12px;max-width:130px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">
+            🎙 {{ selectedVoice ? selectedVoice.name : 'Select Voice' }}
+          </button>
+          <div *ngIf="showVoicePicker" style="position:absolute;top:110%;left:0;z-index:100;background:#1e1e2e;border:1px solid rgba(255,255,255,0.1);border-radius:8px;max-height:200px;overflow-y:auto;min-width:220px;box-shadow:0 8px 24px rgba(0,0,0,0.5);">
+            <button *ngFor="let v of availableVoices"
+                    (click)="selectVoice(v)"
+                    [style.background]="selectedVoice?.name === v.name ? 'rgba(108,99,255,0.3)' : 'none'"
+                    style="display:block;width:100%;padding:8px 12px;text-align:left;border:none;color:#fff;cursor:pointer;font-size:12px;border-bottom:1px solid rgba(255,255,255,0.05);">
+              {{ v.name }} <span style="opacity:0.4;font-size:10px;">{{ v.lang }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT PANEL — AI Coach -->
+    <aside class="panel panel-right">
+      <div class="card coach-card">
+        <div class="coach-head">
+          <span class="coach-badge">⚡ AI Coach</span>
+          <span class="rate-label">10 req/hr</span>
+        </div>
+
+        <div class="ai-err" *ngIf="aiError">⚠ {{ aiError }}</div>
+
+        <div class="hint-box" *ngIf="hintResult">
+          <div class="hb-row">
+            <span class="hb-label">Best Move</span>
+            <span class="hb-move">{{ hintResult.best_move }}</span>
+          </div>
+          <p class="hb-text">{{ hintResult.analysis }}</p>
+          <p class="hb-text dim">{{ hintResult.explanation }}</p>
+        </div>
+
+        <div class="hint-box" *ngIf="explainResult">
+          <div class="hb-row">
+            <span class="hb-label">Explaining</span>
+            <span class="hb-move purple">{{ lastExplainMove }}</span>
+          </div>
+          <p class="hb-text">{{ explainResult }}</p>
+        </div>
+
+        <div class="loading-row" *ngIf="hintLoading||explainLoading">
+          <div class="spinner"></div><span>Analysing…</span>
+        </div>
+
+        <div class="ai-played" *ngIf="aiMode&&aiLastMove&&!aiThinking&&!hintResult&&!explainResult">
+          <span class="hb-label">AI played</span>
+          <span class="hb-move gold">{{ aiLastMove }}</span>
+        </div>
+
+        <div class="coach-idle" *ngIf="!hintResult&&!explainResult&&!hintLoading&&!explainLoading&&!aiError&&!(aiMode&&aiLastMove)">
+          <div class="idle-icon">{{ aiMode ? '🤖' : '🎓' }}</div>
+          <p *ngIf="!aiMode">Click <strong>Get Hint</strong> for best move or <strong>Explain</strong> after a move.</p>
+          <p *ngIf="aiMode">Playing vs AI. Make your move!</p>
+          <p class="dim">Same position = instant answer.</p>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- RIGHT PANEL extras — Commentary -->
+    <ng-container *ngIf="commentaryEnabled">
+      <aside class="panel panel-commentary">
+        <div class="card">
+          <div class="coach-head">
+            <span class="coach-badge">💬 Commentary</span>
+            <button class="rate-label" style="cursor:pointer;background:none;border:none;color:inherit;" (click)="toggleCommentary()">✕</button>
+          </div>
+          <div class="loading-row" *ngIf="commentaryLoading">
+            <div class="spinner"></div><span>Generating…</span>
+          </div>
+          <p class="hb-text" *ngIf="commentary && !commentaryLoading" style="line-height:1.6;margin-top:8px;">{{ commentary }}</p>
+          <p class="dim" *ngIf="!commentary && !commentaryLoading" style="font-size:12px;margin-top:8px;">Commentary appears after each move.</p>
+        </div>
+      </aside>
+    </ng-container>
+
+  </div><!-- /play-body -->
+
+</div><!-- /play-shell -->

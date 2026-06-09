@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Avatar Preview</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0c0a1e; color: white; font-family: sans-serif; padding: 24px; }
+h2 { color: #c084fc; margin: 24px 0 14px; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; }
+.grid { display: flex; flex-wrap: wrap; gap: 20px; }
+.card { text-align: center; }
+.card img {
+  width: 130px; height: 150px;
+  object-fit: cover; object-position: center top;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.12);
+  display: block;
+}
+.card p { margin: 7px 0 0; font-size: 12px; color: rgba(255,255,255,0.45); }
+</style>
+</head>
+<body>
+
+<h2>Indian Female Candidates (Pexels)</h2>
+<div class="grid">
+  <div class="card"><img src="pf1.jpg"/><p>pf1</p></div>
+  <div class="card"><img src="pf2.jpg"/><p>pf2</p></div>
+  <div class="card"><img src="pf3.jpg"/><p>pf3</p></div>
+  <div class="card"><img src="pf4.jpg"/><p>pf4</p></div>
+  <div class="card"><img src="pf5.jpg"/><p>pf5</p></div>
+  <div class="card"><img src="pf6.jpg"/><p>pf6</p></div>
+</div>
+
+<h2>Indian Male Candidates (Pexels)</h2>
+<div class="grid">
+  <div class="card"><img src="pm1.jpg"/><p>pm1</p></div>
+  <div class="card"><img src="pm2.jpg"/><p>pm2</p></div>
+  <div class="card"><img src="pm3.jpg"/><p>pm3</p></div>
+  <div class="card"><img src="pm4.jpg"/><p>pm4</p></div>
+</div>
+
+</body>
+</html>

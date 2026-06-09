@@ -1,0 +1,123 @@
+<div class="analysis-page">
+
+  <!-- Hero -->
+  <div class="hero">
+    <h1 class="hero-title">Game Analysis</h1>
+    <p class="hero-sub">Paste your PGN → AI breaks down every move</p>
+  </div>
+
+  <!-- Two-column layout -->
+  <div class="analysis-layout">
+
+    <!-- Left: Input panel -->
+    <div class="input-panel glass-card">
+      <div class="panel-header">
+        <span class="panel-icon">♟</span>
+        <span class="panel-title">Paste PGN</span>
+      </div>
+
+      <textarea
+        class="pgn-textarea"
+        [(ngModel)]="pgn"
+        placeholder="[Event &quot;Casual Game&quot;]&#10;[White &quot;Player1&quot;]&#10;[Black &quot;Player2&quot;]&#10;&#10;1. e4 e5 2. Nf3 Nc6 3. Bb5 ..."
+        rows="14"
+        [disabled]="loading">
+      </textarea>
+
+      <!-- Language selector -->
+      <div class="lang-row">
+        <span class="lang-label">Language:</span>
+        <div class="lang-pills">
+          <button
+            *ngFor="let l of languages"
+            class="lang-pill"
+            [class.active]="lang === l.value"
+            (click)="lang = l.value"
+            [disabled]="loading">
+            {{ l.label }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div class="error-msg" *ngIf="error">
+        <span>⚠</span> {{ error }}
+      </div>
+
+      <!-- Analyze button -->
+      <button class="btn-analyze" (click)="analyze()" [disabled]="loading || !pgn.trim()">
+        <span class="spinner" *ngIf="loading"></span>
+        <span *ngIf="!loading">⊞ Analyze Game</span>
+        <span *ngIf="loading">Analysing…</span>
+      </button>
+    </div>
+
+    <!-- Right: Results panel -->
+    <div class="result-panel">
+
+      <!-- Empty state -->
+      <div class="empty-state glass-card" *ngIf="!result && !loading">
+        <div class="empty-icon">⊞</div>
+        <p class="empty-title">No analysis yet</p>
+        <p class="empty-sub">Paste a PGN game above to get AI analysis</p>
+      </div>
+
+      <!-- Loading state -->
+      <div class="empty-state glass-card" *ngIf="loading && !result">
+        <div class="spinner spinner-lg"></div>
+        <p class="empty-sub">Analysing your game…</p>
+      </div>
+
+      <!-- Result card -->
+      <div class="result-card glass-card" *ngIf="result">
+
+        <!-- Summary -->
+        <div class="result-summary">
+          <div class="summary-icon">⊞</div>
+          <p class="summary-text">{{ result.summary }}</p>
+        </div>
+
+        <!-- Stats row -->
+        <div class="stats-row">
+          <div class="stat-chip blunder-chip">
+            <span class="stat-val">{{ result.blunders }}</span>
+            <span class="stat-lbl">Blunders</span>
+          </div>
+          <div class="stat-chip mistake-chip">
+            <span class="stat-val">{{ result.mistakes }}</span>
+            <span class="stat-lbl">Mistakes</span>
+          </div>
+          <div class="stat-chip good-chip">
+            <span class="stat-val">{{ result.good_moves }}</span>
+            <span class="stat-lbl">Good Moves</span>
+          </div>
+        </div>
+
+        <!-- Moves list -->
+        <div class="moves-section">
+          <div class="moves-header">Move-by-Move Breakdown</div>
+          <div class="moves-list">
+            <div
+              *ngFor="let move of result.moves"
+              class="move-row"
+              [class.has-annotation]="move.annotation">
+              <span class="move-num">{{ move.move_number }}.</span>
+              <span class="move-san">{{ move.san }}</span>
+              <span
+                *ngIf="move.annotation"
+                class="annotation-badge"
+                [ngClass]="getAnnotationClass(move.annotation)">
+                {{ getAnnotationLabel(move.annotation) }}
+              </span>
+              <span class="move-comment">{{ move.comment }}</span>
+            </div>
+            <div class="moves-empty" *ngIf="result.moves.length === 0">
+              No move comments available.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

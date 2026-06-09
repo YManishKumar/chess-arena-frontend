@@ -1,0 +1,142 @@
+<div class="puzzle-page">
+
+  <!-- Loading state -->
+  <div class="puzzle-loading" *ngIf="loading">
+    <div class="spinner spinner-lg"></div>
+    <p>Loading today's puzzle…</p>
+  </div>
+
+  <!-- Error state -->
+  <div class="puzzle-error glass-card" *ngIf="puzzleError && !loading">
+    <span>⚠</span>
+    <p>{{ puzzleError }}</p>
+    <button class="btn-reload" (click)="loadPuzzle()">Try Again</button>
+  </div>
+
+  <!-- Main content -->
+  <div class="puzzle-layout" *ngIf="!loading && puzzle && !puzzleError">
+
+    <!-- ─── Left: Streak card ─── -->
+    <div class="streak-col">
+      <div class="streak-card glass-card">
+        <div class="streak-flame">🔥</div>
+        <div class="streak-number">{{ streak?.current_streak ?? 0 }}</div>
+        <div class="streak-label">Day Streak</div>
+
+        <div class="streak-stats">
+          <div class="streak-stat">
+            <span class="streak-stat-val">{{ streak?.max_streak ?? 0 }}</span>
+            <span class="streak-stat-lbl">Best Streak</span>
+          </div>
+          <div class="streak-stat-divider"></div>
+          <div class="streak-stat">
+            <span class="streak-stat-val">{{ streak?.total_solved ?? 0 }}</span>
+            <span class="streak-stat-lbl">Total Solved</span>
+          </div>
+        </div>
+
+        <div class="streak-tip">
+          <span *ngIf="(streak?.current_streak ?? 0) > 0">Keep your streak alive — come back tomorrow!</span>
+          <span *ngIf="(streak?.current_streak ?? 0) === 0">Solve today's puzzle to start a streak.</span>
+        </div>
+        <div class="streak-meme" *ngIf="streak">{{ streakMeme }}</div>
+      </div>
+    </div>
+
+    <!-- ─── Center: Puzzle board ─── -->
+    <div class="puzzle-center">
+
+      <!-- Header -->
+      <div class="puzzle-header glass-card">
+        <div class="puzzle-title-row">
+          <h1 class="puzzle-title">Daily Puzzle</h1>
+          <span class="puzzle-date">{{ today }}</span>
+        </div>
+        <div class="puzzle-meta">
+          <span class="rating-badge">Rating: {{ puzzle.rating }}</span>
+          <span class="diff-badge" [ngClass]="difficultyClass">{{ difficultyLabel }}</span>
+        </div>
+      </div>
+
+      <!-- Themes -->
+      <div class="themes-row" *ngIf="puzzle.themes.length > 0">
+        <span class="theme-tag" *ngFor="let t of puzzle.themes">{{ formatTheme(t) }}</span>
+      </div>
+
+      <!-- Board area -->
+      <div class="board-area glass-card">
+        <div class="board-label">Position (FEN)</div>
+
+        <!-- TODO: integrate chess board component -->
+        <div class="fen-display">
+          <code class="fen-code">{{ puzzle.fen }}</code>
+        </div>
+
+        <div class="solution-section">
+          <!-- Result: solved -->
+          <div class="result-banner result-solved" *ngIf="solved === true">
+            <span class="result-icon">✅</span>
+            <span class="result-text">Solved! Brilliant!</span>
+          </div>
+
+          <!-- Result: failed -->
+          <div class="result-banner result-failed" *ngIf="solved === false">
+            <span class="result-icon">❌</span>
+            <span class="result-text">Better luck tomorrow</span>
+          </div>
+
+          <!-- Solved/failed meme -->
+          <div class="solved-meme" *ngIf="solved !== null">{{ solvedMeme }}</div>
+
+          <!-- Solution reveal -->
+          <div class="solution-reveal" *ngIf="showSolution || solved !== null">
+            <div class="solution-header">Solution</div>
+            <div class="solution-moves">
+              <span class="solution-move" *ngFor="let m of puzzle.solution; let i = index">
+                <span class="solution-move-num">{{ i + 1 }}.</span>
+                <span class="solution-move-san">{{ m }}</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Action buttons -->
+          <div class="puzzle-actions" *ngIf="solved === null">
+            <button class="btn-reveal" (click)="revealSolution()">
+              Reveal Solution
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Right: Leaderboard ─── -->
+    <div class="leaderboard-col">
+      <div class="lb-card glass-card">
+        <div class="lb-header">
+          <span class="lb-title">🏆 Streak Leaders</span>
+          <span class="lb-sub">Top 10</span>
+        </div>
+
+        <div class="lb-list">
+          <div
+            class="lb-row"
+            *ngFor="let entry of leaderboard.slice(0, 10); let i = index"
+            [class.lb-top3]="i < 3">
+            <span class="lb-rank" [class.lb-medal]="i < 3">
+              {{ getRankMedal(i) }}
+            </span>
+            <span class="lb-user">{{ truncateUserId(entry.user_id) }}</span>
+            <span class="lb-streak">
+              🔥 {{ entry.current_streak }}
+            </span>
+          </div>
+
+          <div class="lb-empty" *ngIf="leaderboard.length === 0">
+            No data yet — be the first!
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

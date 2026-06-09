@@ -1,0 +1,85 @@
+<div class="wrapped-page">
+
+  <!-- Loading -->
+  <div class="wrapped-loading" *ngIf="loading">
+    <div class="spinner-ring"></div>
+    <p class="loading-text">Calculating your chess era… ⏳</p>
+  </div>
+
+  <!-- Error -->
+  <div class="wrapped-error glass-card" *ngIf="error && !loading">
+    <span class="error-icon">⚠️</span>
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- Main content -->
+  <div class="wrapped-content" *ngIf="stats && !loading">
+
+    <!-- Hero -->
+    <div class="wrapped-hero">
+      <div class="hero-glow-orb orb-1"></div>
+      <div class="hero-glow-orb orb-2"></div>
+      <div class="hero-badge">♟️</div>
+      <h1 class="wrapped-title">Your Chess Wrapped</h1>
+      <div class="wrapped-year">2024</div>
+    </div>
+
+    <!-- Personality type -->
+    <div class="personality-card glass-card">
+      <div class="personality-label">Your Chess Personality</div>
+      <div class="personality-type">{{ stats.personality_type }}</div>
+    </div>
+
+    <!-- Stats grid -->
+    <div class="stats-grid">
+      <div
+        class="stat-card glass-card"
+        *ngFor="let card of statCards"
+        [style.--card-color]="card.color"
+        [style.--card-glow]="card.glow">
+        <div class="stat-glow"></div>
+        <div class="stat-emoji">{{ card.icon }}</div>
+        <div class="stat-value" [style.color]="card.color">{{ card.value }}</div>
+        <div class="stat-label">{{ card.label }}</div>
+      </div>
+    </div>
+
+    <!-- Favorite opening & best month -->
+    <div class="highlights-row">
+      <div class="highlight-card glass-card">
+        <div class="highlight-icon">♟</div>
+        <div class="highlight-body">
+          <div class="highlight-label">Favorite Opening</div>
+          <div class="highlight-value">{{ stats.favorite_opening }}</div>
+        </div>
+      </div>
+      <div class="highlight-card glass-card">
+        <div class="highlight-icon">📅</div>
+        <div class="highlight-body">
+          <div class="highlight-label">Best Month</div>
+          <div class="highlight-value">{{ stats.best_month }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Summary -->
+    <div class="summary-card glass-card" [class.summary-visible]="summaryVisible">
+      <div class="summary-label">✨ AI Summary</div>
+      <p class="summary-text">{{ stats.ai_summary }}</p>
+    </div>
+
+    <!-- Share button -->
+    <div class="share-row">
+      <button class="share-btn" (click)="copyShareText()" [class.copied]="copied">
+        <span class="share-icon">{{ copied ? '✅' : '🔗' }}</span>
+        <span>{{ copied ? 'Copied to clipboard!' : 'Share Your Wrapped' }}</span>
+      </button>
+    </div>
+
+    <!-- Deco pieces -->
+    <div class="deco-wrap deco-a">♛</div>
+    <div class="deco-wrap deco-b">♞</div>
+    <div class="deco-wrap deco-c">♜</div>
+
+  </div>
+</div>

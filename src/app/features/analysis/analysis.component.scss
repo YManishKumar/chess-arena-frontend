@@ -1,0 +1,460 @@
+.analysis-page {
+  padding: 28px 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+/* ── Hero ── */
+.hero {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.hero-title {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #6c63ff, #26de81);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 8px;
+}
+
+.hero-sub {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* ── Glass card ── */
+.glass-card {
+  background: rgba(13, 17, 36, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  padding: 24px;
+}
+
+/* ── Layout ── */
+.analysis-layout {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* ── Input panel ── */
+.input-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.panel-icon {
+  font-size: 1.3rem;
+}
+
+.panel-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.pgn-textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: #e0e0e0;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  padding: 12px;
+  resize: vertical;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.25);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: rgba(108, 99, 255, 0.5);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+/* ── Language pills ── */
+.lang-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lang-label {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.lang-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.lang-pill {
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &.active {
+    background: rgba(108, 99, 255, 0.25);
+    border-color: #6c63ff;
+    color: #a29bfe;
+  }
+
+  &:hover:not(.active):not(:disabled) {
+    border-color: rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/* ── Error ── */
+.error-msg {
+  background: rgba(255, 71, 87, 0.12);
+  border: 1px solid rgba(255, 71, 87, 0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #ff6b81;
+  font-size: 0.87rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Analyze button ── */
+.btn-analyze {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, #6c63ff, #5a52e0);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.2s, transform 0.1s;
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+/* ── Empty state ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 320px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  opacity: 0.3;
+}
+
+.empty-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+.empty-sub {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* ── Result card ── */
+.result-card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Summary ── */
+.result-summary {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: rgba(108, 99, 255, 0.08);
+  border: 1px solid rgba(108, 99, 255, 0.2);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.summary-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.summary-text {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Stats row ── */
+.stats-row {
+  display: flex;
+  gap: 12px;
+}
+
+.stat-chip {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 8px;
+  border-radius: 10px;
+  border: 1px solid;
+}
+
+.blunder-chip {
+  background: rgba(255, 71, 87, 0.1);
+  border-color: rgba(255, 71, 87, 0.25);
+
+  .stat-val { color: #ff4757; }
+}
+
+.mistake-chip {
+  background: rgba(255, 165, 2, 0.1);
+  border-color: rgba(255, 165, 2, 0.25);
+
+  .stat-val { color: #ffa502; }
+}
+
+.good-chip {
+  background: rgba(38, 222, 129, 0.1);
+  border-color: rgba(38, 222, 129, 0.25);
+
+  .stat-val { color: #26de81; }
+}
+
+.stat-val {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.stat-lbl {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Moves list ── */
+.moves-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.moves-header {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.moves-list {
+  max-height: 380px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(108, 99, 255, 0.4);
+    border-radius: 4px;
+  }
+}
+
+.move-row {
+  display: grid;
+  grid-template-columns: 32px 60px auto 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  transition: background 0.15s;
+
+  &:nth-child(even) {
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  &:hover {
+    background: rgba(108, 99, 255, 0.08);
+  }
+}
+
+.move-num {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.82rem;
+  text-align: right;
+}
+
+.move-san {
+  color: rgba(255, 255, 255, 0.9);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.annotation-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  flex-shrink: 0;
+
+  &.blunder {
+    background: rgba(255, 71, 87, 0.2);
+    color: #ff4757;
+    border: 1px solid rgba(255, 71, 87, 0.4);
+  }
+
+  &.mistake {
+    background: rgba(255, 165, 2, 0.2);
+    color: #ffa502;
+    border: 1px solid rgba(255, 165, 2, 0.4);
+  }
+
+  &.good {
+    background: rgba(38, 222, 129, 0.2);
+    color: #26de81;
+    border: 1px solid rgba(38, 222, 129, 0.4);
+  }
+
+  &.brilliant {
+    background: rgba(162, 155, 254, 0.2);
+    color: #a29bfe;
+    border: 1px solid rgba(162, 155, 254, 0.4);
+  }
+}
+
+.move-comment {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.moves-empty {
+  padding: 20px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.9rem;
+}
+
+/* ── Spinner ── */
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+.spinner-lg {
+  width: 36px;
+  height: 36px;
+  border-width: 3px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Annotation color classes (standalone, not in badge) ── */
+.blunder { color: #ff4757; }
+.mistake { color: #ffa502; }
+.good    { color: #26de81; }
+.brilliant { color: #a29bfe; }
+
+/* ── Responsive ── */
+@media (max-width: 800px) {
+  .analysis-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .analysis-page {
+    padding: 16px;
+  }
+
+  .hero-title {
+    font-size: 1.5rem;
+  }
+
+  .stats-row {
+    gap: 8px;
+  }
+}

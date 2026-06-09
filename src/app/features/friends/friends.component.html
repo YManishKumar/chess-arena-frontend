@@ -1,0 +1,251 @@
+<div class="friends-shell">
+
+  <!-- Left: friends list -->
+  <div class="friends-panel">
+
+    <div class="panel-header">
+      <h2 class="panel-title">Friends</h2>
+      <div class="tabs">
+        <button class="tab-btn" [class.active]="tab === 'friends'" (click)="setTab('friends')">
+          My Friends
+          <span class="tab-count" *ngIf="pendingReceived.length > 0">{{ pendingReceived.length }}</span>
+        </button>
+        <button class="tab-btn" [class.active]="tab === 'browse'" (click)="setTab('browse')">Discover</button>
+      </div>
+    </div>
+
+    <!-- Add friend input -->
+    <div class="add-friend-box" *ngIf="tab === 'friends'">
+      <input class="input-field" [(ngModel)]="addEmail" placeholder="Add by email…" type="email"
+             (keyup.enter)="sendRequest()" [disabled]="addLoading" />
+      <button class="btn btn-primary" (click)="sendRequest()" [disabled]="addLoading || !addEmail.trim()">
+        <span *ngIf="!addLoading">+</span>
+        <span class="spinner" *ngIf="addLoading"></span>
+      </button>
+    </div>
+    <p *ngIf="addError"   class="feedback-msg danger">{{ addError }}</p>
+    <p *ngIf="addSuccess" class="feedback-msg success">✓ {{ addSuccess }}</p>
+
+    <!-- Search (browse) -->
+    <div class="add-friend-box" *ngIf="tab === 'browse'">
+      <input class="input-field" [(ngModel)]="memberSearch" placeholder="Search members…" />
+    </div>
+
+    <!-- Loading -->
+    <div class="list-loading" *ngIf="pageLoading || membersLoading">
+      <div class="skeleton" style="height:60px; margin-bottom:8px; border-radius:12px;"></div>
+      <div class="skeleton" style="height:60px; margin-bottom:8px; border-radius:12px;"></div>
+      <div class="skeleton" style="height:60px; border-radius:12px;"></div>
+    </div>
+
+    <!-- Friends tab -->
+    <div class="friends-list" *ngIf="tab === 'friends' && !pageLoading">
+
+      <!-- Incoming requests -->
+      <div class="list-section" *ngIf="pendingReceived.length > 0">
+        <div class="list-section-label">
+          <span>Incoming</span>
+          <span class="badge badge-danger">{{ pendingReceived.length }}</span>
+        </div>
+        <div class="friend-row incoming" *ngFor="let f of pendingReceived" (click)="selectFriend(f.requester_email, null)">
+          <div class="avatar avatar-sm">{{ initials(f.requester_email) }}</div>
+          <div class="friend-row-info">
+            <div class="friend-row-name">{{ f.requester_email }}</div>
+            <div class="friend-row-sub">Wants to connect</div>
+          </div>
+          <div class="friend-row-actions" (click)="$event.stopPropagation()">
+            <button class="btn btn-sm btn-emerald" (click)="accept(f.requester_email)">✓</button>
+            <button class="btn btn-sm btn-ghost"   (click)="remove(f.requester_email)">✕</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Accepted -->
+      <div class="list-section">
+        <div class="list-section-label">
+          <span>Connected</span>
+          <span class="badge badge-primary">{{ accepted.length }}</span>
+        </div>
+        <div class="empty-inline" *ngIf="accepted.length === 0">
+          <span>No friends yet</span>
+          <button class="btn btn-sm btn-ghost" (click)="setTab('browse')">Discover members →</button>
+        </div>
+
+        <div class="friend-card"
+             *ngFor="let f of accepted"
+             [class.active]="selectedEmail === friendEmail(f)"
+             (click)="selectFriend(friendEmail(f), f)">
+
+          <!-- Main row -->
+          <div class="friend-row-main">
+            <div class="avatar avatar-sm">{{ initials(friendEmail(f)) }}</div>
+            <div class="friend-row-info">
+              <div class="friend-row-name">{{ friendEmail(f) }}</div>
+              <div class="friend-row-sub connected">● Online</div>
+            </div>
+            <div class="friend-row-actions" (click)="$event.stopPropagation()">
+              <button class="btn btn-sm btn-gold" title="Challenge to chess" (click)="inviteToGame(friendEmail(f))">
+                <span *ngIf="!inviteLoading[friendEmail(f)]">♟</span>
+                <span class="spinner" *ngIf="inviteLoading[friendEmail(f)]"></span>
+              </button>
+              <button class="btn btn-sm btn-beef"
+                      title="Check Beef"
+                      (click)="loadRivalry(friendEmail(f))"
+                      *ngIf="rivalryStats[friendEmail(f)] === undefined && !rivalryLoading[friendEmail(f)]">
+                🥊 Beef
+              </button>
+              <span class="spinner spinner-xs" *ngIf="rivalryLoading[friendEmail(f)]"></span>
+            </div>
+          </div>
+
+          <!-- Beef stats -->
+          <div class="beef-section" *ngIf="rivalryStats[friendEmail(f)] !== undefined"
+               (click)="$event.stopPropagation()">
+
+            <ng-container *ngIf="rivalryStats[friendEmail(f)] as beef">
+              <div class="beef-score-row">
+                <span class="beef-score"
+                      [class.beef-winning]="beef.status === 'you\'re winning'"
+                      [class.beef-losing]="beef.status === 'they\'re winning'"
+                      [class.beef-tied]="beef.status === 'tied'">
+                  You {{ beef.user_wins }} – {{ beef.friend_wins }} Them
+                </span>
+                <span class="beef-draws" *ngIf="beef.draws > 0">{{ beef.draws }}D</span>
+                <span class="beef-total">{{ beef.total_games }} games</span>
+              </div>
+              <div class="beef-status-label"
+                   [class.beef-winning]="beef.status === 'you\'re winning'"
+                   [class.beef-losing]="beef.status === 'they\'re winning'"
+                   [class.beef-tied]="beef.status === 'tied'">
+                {{ beef.status === "you're winning" ? "🔥 You're winning this rivalry" :
+                   beef.status === "they're winning" ? "💀 They're winning — get revenge!" :
+                   "🤝 All tied up" }}
+              </div>
+            </ng-container>
+
+            <div class="beef-empty" *ngIf="rivalryStats[friendEmail(f)] === null">
+              🫂 No games played yet
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Sent -->
+      <div class="list-section" *ngIf="pendingSent.length > 0">
+        <div class="list-section-label"><span>Sent</span></div>
+        <div class="friend-row muted" *ngFor="let f of pendingSent">
+          <div class="avatar avatar-sm">{{ initials(f.receiver_email) }}</div>
+          <div class="friend-row-info">
+            <div class="friend-row-name">{{ f.receiver_email }}</div>
+            <div class="friend-row-sub">Pending…</div>
+          </div>
+          <button class="btn btn-sm btn-ghost" (click)="remove(f.receiver_email)">Cancel</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Browse tab -->
+    <div class="friends-list" *ngIf="tab === 'browse' && !membersLoading">
+      <div class="friend-row" *ngFor="let m of filteredMembers" (click)="selectFriend(m.email, null)">
+        <div class="avatar avatar-sm" [class.avatar-gold]="m.friendship_status === 'accepted'">
+          {{ initials(m.name || m.email) }}
+        </div>
+        <div class="friend-row-info">
+          <div class="friend-row-name">{{ m.name || m.email }}</div>
+          <div class="friend-row-sub">{{ m.email }}</div>
+        </div>
+        <div class="friend-row-actions" (click)="$event.stopPropagation()">
+          <ng-container [ngSwitch]="m.friendship_status">
+            <button *ngSwitchCase="'none'"             class="btn btn-sm btn-primary" (click)="sendRequestTo(m.email)">Add</button>
+            <button *ngSwitchCase="'pending_sent'"     class="btn btn-sm btn-ghost"   (click)="cancelOrRemove(m.email)">Sent</button>
+            <button *ngSwitchCase="'pending_received'" class="btn btn-sm btn-emerald" (click)="acceptFromBrowse(m.email)">Accept</button>
+            <span   *ngSwitchCase="'accepted'"         class="badge badge-emerald">Friends</span>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Right: chat panel -->
+  <div class="chat-panel" [class.visible]="selectedEmail">
+
+    <!-- No selection -->
+    <div class="chat-empty" *ngIf="!selectedEmail">
+      <div class="chat-empty-icon animate-float">💬</div>
+      <h3>Select a friend</h3>
+      <p>Click a friend to start chatting</p>
+    </div>
+
+    <!-- Chat active -->
+    <ng-container *ngIf="selectedEmail">
+      <div class="chat-header">
+        <div class="avatar avatar-sm">{{ initials(selectedEmail) }}</div>
+        <div class="chat-header-info">
+          <div class="chat-header-name">{{ selectedEmail }}</div>
+          <div class="chat-header-sub connected">● Online</div>
+        </div>
+        <button class="btn btn-sm btn-gold" (click)="inviteToGame(selectedEmail)"
+                [disabled]="!!inviteLoading[selectedEmail]" title="Challenge to chess">
+          <span *ngIf="!inviteLoading[selectedEmail]">♟ Challenge</span>
+          <span class="spinner" *ngIf="inviteLoading[selectedEmail]"></span>
+        </button>
+        <button class="btn btn-sm btn-ghost" (click)="selectedEmail = null">✕</button>
+      </div>
+
+      <div class="chat-messages" #chatMessages>
+        <div *ngIf="chatLoading" class="chat-loading">
+          <div class="spinner"></div>
+        </div>
+        <div *ngFor="let msg of messages"
+             class="message-bubble"
+             [class.outgoing]="msg.sender_id === myId">
+          <div class="bubble-text">{{ msg.content }}</div>
+          <div class="bubble-time">{{ formatTime(msg.created_at) }}</div>
+        </div>
+        <div class="typing-indicator" *ngIf="false">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+
+      <!-- Speed mode toggle -->
+      <div class="speed-mode-bar">
+        <button class="btn-speed-mode" [class.active]="emojiOnlyMode" (click)="toggleEmojiMode()">
+          ⚡ Speed Mode
+        </button>
+        <span class="speed-mode-label" *ngIf="emojiOnlyMode">Emoji-only chess chat activated 🔥</span>
+      </div>
+
+      <!-- Emoji grid (speed mode) -->
+      <div class="emoji-grid" *ngIf="emojiOnlyMode">
+        <button class="emoji-btn"
+                *ngFor="let e of speedEmojis"
+                (click)="sendEmojiMessage(e)"
+                [disabled]="chatSending">
+          {{ e }}
+        </button>
+      </div>
+
+      <!-- Normal text input (hidden in speed mode) -->
+      <div class="chat-input-row" *ngIf="!emojiOnlyMode">
+        <input class="input-field chat-input"
+               [(ngModel)]="chatInput"
+               placeholder="Message…"
+               (keyup.enter)="sendChatMessage()"
+               [disabled]="chatSending" />
+        <button class="btn btn-primary send-btn"
+                (click)="sendChatMessage()"
+                [disabled]="chatSending || !chatInput.trim()">
+          <span *ngIf="!chatSending">➤</span>
+          <span class="spinner" *ngIf="chatSending"></span>
+        </button>
+      </div>
+
+      <p *ngIf="inviteSuccess" class="feedback-msg success invite-feedback">✓ {{ inviteSuccess }}</p>
+    </ng-container>
+
+  </div>
+
+</div>
