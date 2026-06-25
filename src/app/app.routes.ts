@@ -48,6 +48,26 @@ export const routes: Routes = [
       {
         path: 'wrapped',
         loadComponent: () => import('./features/wrapped/wrapped.component').then(m => m.WrappedComponent)
+      },
+      {
+        path: 'domino',
+        loadComponent: () => import('./features/domino/domino.component').then(m => m.DominoComponent)
+      },
+      {
+        path: 'domino/game',
+        loadComponent: () => import('./features/domino/domino-game.component').then(m => m.DominoGameComponent)
+      },
+      {
+        path: 'domino/result',
+        loadComponent: () => import('./features/domino/domino-result.component').then(m => m.DominoResultComponent)
+      },
+      {
+        path: 'domino/lobby/:code',
+        loadComponent: () => import('./features/domino/domino-lobby.component').then(m => m.DominoLobbyComponent)
+      },
+      {
+        path: 'domino/room/:code',
+        loadComponent: () => import('./features/domino/domino-room.component').then(m => m.DominoRoomComponent)
       }
     ]
   },

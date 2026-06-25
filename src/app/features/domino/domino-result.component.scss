@@ -1,0 +1,84 @@
+.result-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #0a1628;
+}
+
+.result-card {
+  background: rgba(13,17,36,0.85);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 24px;
+  padding: 36px 28px;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  backdrop-filter: blur(16px);
+}
+
+.result-icon { font-size: 48px; margin-bottom: 8px; }
+
+.result-title {
+  font-size: 22px;
+  font-weight: 900;
+  margin-bottom: 4px;
+  &.win { background: linear-gradient(135deg,#f5a623,#e8c84a); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  &.loss { color: #ff6b6b; }
+}
+
+.coins-delta {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  &.positive { color: #26de81; }
+  &.negative { color: #ff6b6b; }
+}
+
+.scores-list {
+  background: rgba(255,255,255,0.04);
+  border-radius: 12px;
+  padding: 8px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.score-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #aaa;
+  &.me { background: rgba(38,222,129,0.08); color: #fff; font-weight: 600; }
+}
+
+.rank-emoji { font-size: 16px; }
+.player-name { flex: 1; text-align: left; }
+.pip-total { font-size: 12px; color: #666; }
+.bonus { color: #26de81; font-size: 12px; font-weight: 700; }
+
+.balance-row { font-size: 13px; color: #666; margin-bottom: 20px; strong { color: #f5a623; } }
+
+.action-btns { display: flex; gap: 10px; }
+
+.btn-primary {
+  flex: 1; padding: 14px;
+  background: linear-gradient(135deg,#6c63ff,#26de81);
+  border: none; border-radius: 12px;
+  color: #fff; font-weight: 700; font-size: 14px; cursor: pointer;
+  &:hover { opacity: 0.9; }
+}
+
+.btn-ghost {
+  flex: 1; padding: 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  color: #888; font-size: 14px; cursor: pointer;
+  &:hover { border-color: rgba(255,255,255,0.2); color: #ccc; }
+}

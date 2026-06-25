@@ -1,0 +1,27 @@
+<div class="result-page">
+  <div class="result-card">
+    <div class="result-icon">{{ won ? '🏆' : '💀' }}</div>
+    <div class="result-title" [class.win]="won" [class.loss]="!won">
+      {{ won ? 'You Won!' : 'Better luck next time' }}
+    </div>
+    <div class="coins-delta" [class.positive]="coinsDelta > 0" [class.negative]="coinsDelta < 0">
+      {{ coinsDelta > 0 ? '+' : '' }}{{ coinsDelta }} coins
+    </div>
+
+    <div class="scores-list">
+      <div class="score-row" *ngFor="let r of ranks" [class.me]="r.id === 'human'">
+        <span class="rank-emoji">{{ getRankEmoji(r.rank) }}</span>
+        <span class="player-name">{{ getName(r.id) }}</span>
+        <span class="pip-total">TOTAL {{ r.score }}</span>
+        <span class="bonus" *ngIf="r.id === 'human' && won">+{{ bet * 3 }} ⭐</span>
+      </div>
+    </div>
+
+    <div class="balance-row">Balance: <strong>{{ newBalance }}</strong> ⭐</div>
+
+    <div class="action-btns">
+      <button class="btn-primary" (click)="playAgain()">Play Again</button>
+      <button class="btn-ghost" (click)="goLobby()">Back to Lobby</button>
+    </div>
+  </div>
+</div>

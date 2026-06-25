@@ -1,0 +1,132 @@
+<div class="domino-board" *ngIf="gs">
+
+  <!-- Top opponent -->
+  <div class="player-row top-player" *ngIf="topOpponent">
+    <div class="player-info">
+      <span class="player-icon" [class.bot]="topOpponent.isBot">{{ playerIcon(topOpponent) }}</span>
+      <span class="player-name">{{ topOpponent.name }}</span>
+      <span class="tile-count">{{ topOpponent.hand.length }} tiles</span>
+      <span class="turn-dot" *ngIf="isTurn(topOpponent) && gs.phase === 'playing'"></span>
+    </div>
+    <div class="hand face-down">
+      <div class="tile-back" *ngFor="let t of topOpponent.hand"></div>
+    </div>
+  </div>
+
+  <div class="middle-row">
+
+    <!-- Left opponent -->
+    <div class="side-player left-player" *ngIf="leftOpponent">
+      <span class="player-icon sm" [class.bot]="leftOpponent.isBot">{{ playerIcon(leftOpponent) }}</span>
+      <div class="player-name sm">{{ leftOpponent.name }}</div>
+      <div class="hand face-down vertical">
+        <div class="tile-back small" *ngFor="let t of leftOpponent.hand"></div>
+      </div>
+      <div class="tile-count">{{ leftOpponent.hand.length }}</div>
+      <span class="turn-dot" *ngIf="isTurn(leftOpponent) && gs.phase === 'playing'"></span>
+    </div>
+
+    <!-- Chain -->
+    <div class="chain-area">
+      <div class="chain-label">CHAIN</div>
+      <div class="chain-scroll">
+        <div class="chain-tiles" *ngIf="gs.chain.length > 0">
+          <div class="chain-tile" *ngFor="let ct of gs.chain">
+            <div class="pip-half">
+              <ng-container *ngFor="let row of pipRows(ct.flipped ? ct.right : ct.left)">
+                <div class="pip-row">
+                  <span *ngFor="let cell of row" class="pip-cell" [class.dot]="cell === 1"></span>
+                </div>
+              </ng-container>
+            </div>
+            <div class="tile-divider-h"></div>
+            <div class="pip-half">
+              <ng-container *ngFor="let row of pipRows(ct.flipped ? ct.left : ct.right)">
+                <div class="pip-row">
+                  <span *ngFor="let cell of row" class="pip-cell" [class.dot]="cell === 1"></span>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+        <div class="chain-empty" *ngIf="gs.chain.length === 0">First move — any tile</div>
+      </div>
+      <div class="open-ends" *ngIf="gs.chain.length > 0">
+        <span class="end-badge">↤ {{ gs.leftEnd }}</span>
+        <span class="end-badge">{{ gs.rightEnd }} ↦</span>
+      </div>
+    </div>
+
+    <!-- Right opponent -->
+    <div class="side-player right-player" *ngIf="rightOpponent">
+      <span class="player-icon sm" [class.bot]="rightOpponent.isBot">{{ playerIcon(rightOpponent) }}</span>
+      <div class="player-name sm">{{ rightOpponent.name }}</div>
+      <div class="hand face-down vertical">
+        <div class="tile-back small" *ngFor="let t of rightOpponent.hand"></div>
+      </div>
+      <div class="tile-count">{{ rightOpponent.hand.length }}</div>
+      <span class="turn-dot" *ngIf="isTurn(rightOpponent) && gs.phase === 'playing'"></span>
+    </div>
+
+  </div>
+
+  <!-- Turn bar -->
+  <div class="turn-bar" [class.my-turn]="isMyTurn" [class.waiting]="!isMyTurn">
+    <span *ngIf="isMyTurn && validMoves.length > 0">YOUR TURN — tap a glowing tile</span>
+    <span *ngIf="isMyTurn && validMoves.length === 0">No valid moves — press PASS</span>
+    <span *ngIf="!isMyTurn && submitting">Sending move…</span>
+    <span *ngIf="!isMyTurn && !submitting">{{ currentPlayer?.name }} is playing…</span>
+  </div>
+
+  <!-- Side select overlay -->
+  <div class="side-select" *ngIf="selectedTile && gs.chain.length > 0">
+    <span class="side-select-label">Play on which end?</span>
+    <button class="side-btn" (click)="playOnSide('left')">← Left ({{ gs.leftEnd }})</button>
+    <button class="side-btn" (click)="playOnSide('right')">Right ({{ gs.rightEnd }}) →</button>
+    <button class="side-btn cancel" (click)="selectedTile = null">Cancel</button>
+  </div>
+
+  <!-- Your hand -->
+  <div class="your-hand" *ngIf="myPlayer">
+    <div class="hand-label">YOU · {{ myPlayer.hand.length }} tiles</div>
+    <div class="hand-tiles">
+      <div
+        *ngFor="let tile of myPlayer.hand"
+        class="tile"
+        [class.valid]="isValid(tile)"
+        [class.selected]="selectedTile?.id === tile.id"
+        [class.invalid]="!isValid(tile) && isMyTurn"
+        (click)="selectTile(tile)">
+        <div class="pip-half">
+          <ng-container *ngFor="let row of pipRows(tile.left)">
+            <div class="pip-row">
+              <span *ngFor="let cell of row" class="pip-cell" [class.dot]="cell === 1"></span>
+            </div>
+          </ng-container>
+        </div>
+        <div class="tile-divider"></div>
+        <div class="pip-half">
+          <ng-container *ngFor="let row of pipRows(tile.right)">
+            <div class="pip-row">
+              <span *ngFor="let cell of row" class="pip-cell" [class.dot]="cell === 1"></span>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pass + error -->
+  <div class="pass-row">
+    <button class="pass-btn" [disabled]="!canPass()" (click)="pass()">PASS</button>
+    <span class="error-inline" *ngIf="error">{{ error }}</span>
+  </div>
+
+</div>
+
+<div class="loading-screen" *ngIf="!gs && !error">
+  <div>Loading game…</div>
+</div>
+<div class="loading-screen" *ngIf="error && !gs">
+  <div class="err">{{ error }}</div>
+</div>

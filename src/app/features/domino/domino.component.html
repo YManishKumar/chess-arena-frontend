@@ -1,0 +1,54 @@
+<div class="domino-lobby">
+  <div class="lobby-card">
+    <div class="lobby-title">DOMINO</div>
+
+    <!-- Bet selector (always visible) -->
+    <div class="bet-section">
+      <div class="bet-label">Select Bet</div>
+      <div class="bet-options">
+        <button
+          *ngFor="let b of betOptions"
+          class="bet-btn"
+          [class.active]="selectedBet === b"
+          (click)="selectBet(b)">
+          <span class="coin-icon">⭐</span> {{ b }}
+        </button>
+      </div>
+    </div>
+
+    <div class="payout-info">
+      Win → earn <strong>{{ selectedBet * 3 }}</strong> coins &nbsp;|&nbsp;
+      Lose → lose <strong>{{ selectedBet }}</strong> coins
+    </div>
+
+    <!-- Mode chooser -->
+    <ng-container *ngIf="mode === 'choose'">
+      <button class="play-btn" (click)="startSolo()">🤖 Play vs AI Bots</button>
+      <button class="play-btn secondary" (click)="mode = 'friends'">👥 Play with Friends</button>
+    </ng-container>
+
+    <!-- Friends mode -->
+    <ng-container *ngIf="mode === 'friends'">
+      <button class="play-btn" (click)="createRoom()" [disabled]="starting">
+        {{ starting ? 'Creating…' : '🎮 Create Room' }}
+      </button>
+      <div class="divider-text">— or join with code —</div>
+      <div class="join-row">
+        <input
+          class="code-input"
+          [(ngModel)]="joinCode"
+          placeholder="ABCD12"
+          maxlength="6"
+          (keyup.enter)="joinRoom()" />
+        <button class="join-btn" (click)="joinRoom()" [disabled]="starting">Join</button>
+      </div>
+      <button class="back-btn" (click)="mode = 'choose'; error = ''">← Back</button>
+    </ng-container>
+
+    <div class="error-msg" *ngIf="error">{{ error }}</div>
+
+    <div class="rules-hint">
+      <strong>Rules:</strong> Match tile ends · First to empty hand wins · AI fills empty seats
+    </div>
+  </div>
+</div>
